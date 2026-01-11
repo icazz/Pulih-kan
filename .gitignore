@@ -1,0 +1,53 @@
+# --- SISTEM & EDITOR ---
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+.fleet
+.zed
+.nova
+.phpactor.json
+
+# --- DEPENDENCY (Jangan di-upload, berat!) ---
+/vendor
+/node_modules
+
+# --- LARAVEL ENVIRONMENT (RAHASIA!) ---
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+/auth.json
+
+# --- BUILD ASSETS (Dibuat otomatis oleh Render) ---
+/public/build
+/public/hot
+/public/storage
+
+# --- LOGS ---
+/storage/logs/*.log
+npm-debug.log
+yarn-error.log
+
+# --- FRAMEWORK CACHE (PENTING: Agar tidak error di Render) ---
+/bootstrap/cache/*.php
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+
+# --- KECUALIKAN FILE INI (Agar folder strukturnya tetap ada) ---
+!/bootstrap/cache/.gitignore
+!/storage/framework/cache/data/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/testing/.gitignore
+!/storage/framework/views/.gitignore
+
+# --- LOCAL STORAGE (Karena kita pakai Cloudinary) ---
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/*.key
+
+# --- LAINNYA ---
+Homestead.json
+Homestead.yaml
