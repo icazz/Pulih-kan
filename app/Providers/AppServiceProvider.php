@@ -2,7 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Vite; // <--- JANGAN LUPA BARIS INI
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,9 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // KITA UBAH KE SINI:
-        // Karena di screenshot kamu filenya ada di "public/build/manifest.json"
-        // Kita suruh Laravel pakai nama file itu saja, tanpa embel-embel ".vite"
         Vite::useManifestFilename('manifest.json');
+
+        // 2. Fix Mixed Content (TAMBAHAN BARU)
+        // Jika aplikasi berjalan di Production (Railway), paksa gunakan HTTPS
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
