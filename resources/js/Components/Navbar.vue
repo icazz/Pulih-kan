@@ -2,11 +2,9 @@
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
-// Mengambil data User dari Global Props Inertia
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
-// State untuk Dropdown User
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);
 
@@ -14,7 +12,6 @@ const toggleDropdown = () => {
     isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-// Menutup dropdown jika klik di luar
 const closeDropdown = (e) => {
     if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
         isDropdownOpen.value = false;
@@ -24,7 +21,6 @@ const closeDropdown = (e) => {
 onMounted(() => document.addEventListener('click', closeDropdown));
 onUnmounted(() => document.removeEventListener('click', closeDropdown));
 
-// Fungsi Logout
 const logout = () => {
     router.post(route('logout'));
 };
