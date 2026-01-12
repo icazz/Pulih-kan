@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\ReportAttachment; // Jangan lupa import ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-// 1. IMPORT FACADE CLOUDINARY
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ReportController extends Controller
@@ -18,110 +18,124 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        // 2. VALIDASI
-        // Kita tambahkan validasi untuk 'video'
+        // 1. VALIDASI
         $request->validate([
-            'title' => 'required', // Saya sesuaikan field frontend Anda (title/deskripsi)
-            'location' => 'required',
-            'video' => 'nullable|file|mimetypes:video/mp4,video/mpeg,video/quicktime|max:51200', // Max 50MB
-            // Jika masih mau upload foto juga, biarkan di bawah ini:
-            'foto' => 'nullable|image|max:10240', 
+            'title' => 'required|string|max:255',
+            'location' => 'required|string',
+            // Video: Max 50MB
+            'video' => 'nullable|file|mimetypes:video/mp4,video/mpeg,video/quicktime|max:51200', 
+            // Foto: Array, Max 5MB per foto
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|max:5120', 
         ]);
 
         $videoUrl = null;
-        $imageUrl = null;
+        $thumbnailUrl = null; // Foto pertama akan jadi thumbnail
 
-        // 3. LOGIKA UPLOAD VIDEO KE CLOUDINARY
-        if ($request->hasFile('video')) {
-            // Upload Video
-            $uploadedVideo = Cloudinary::uploadVideo($request->file('video')->getRealPath(), [
-                'folder' => 'laporan_banjir_video',
-                'resource_type' => 'video'
+        try {
+            // 2. UPLOAD VIDEO (Single)
+            if ($request->hasFile('video')) {
+                $uploadedVideo = Cloudinary::uploadVideo($request->file('video')->getRealPath(), [
+                    'folder' => 'laporan_banjir_video',
+                    'resource_type' => 'video'
+                ]);
+                $videoUrl = $uploadedVideo->getSecurePath();
+            }
+
+            // 3. SIMPAN LAPORAN UTAMA (Create Report)
+            $report = Report::create([
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                // Handle deskripsi null/kosong
+                'description' => $request->deskripsi ?? $request->description ?? '-',
+                'location' => $request->location,
+                'status' => 'pending',
+                'video_url' => $videoUrl,
+                // Latitude/Longitude: Pastikan null jika kosong (Postgres Strict)
+                'latitude' => $request->latitude ? $request->latitude : null,
+                'longitude' => $request->longitude ? $request->longitude : null,
             ]);
-            // Ambil Link Aman (https)
-            $videoUrl = $uploadedVideo->getSecurePath();
+
+            // 4. UPLOAD BANYAK FOTO (Multiple)
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $index => $photo) {
+                    // Upload ke Cloudinary
+                    $uploadedPhoto = Cloudinary::upload($photo->getRealPath(), [
+                        'folder' => 'laporan_banjir_foto'
+                    ]);
+                    $secureUrl = $uploadedPhoto->getSecurePath();
+
+                    // Simpan ke Tabel Attachments
+                    ReportAttachment::create([
+                        'report_id' => $report->id,
+                        'file_url' => $secureUrl,
+                        'file_type' => 'image',
+                    ]);
+
+                    // Jadikan foto pertama sebagai thumbnail di tabel utama
+                    if ($index === 0) {
+                        $report->update(['image_before' => $secureUrl]);
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            // Jika error, kembalikan ke form dengan pesan
+            return back()->withErrors(['video' => 'Gagal upload: ' . $e->getMessage()]);
         }
 
-        // (Opsional) LOGIKA UPLOAD FOTO KE CLOUDINARY (Biar hemat storage Render juga)
-        if ($request->hasFile('foto')) {
-            $uploadedImage = Cloudinary::upload($request->file('foto')->getRealPath(), [
-                'folder' => 'laporan_banjir_foto'
-            ]);
-            $imageUrl = $uploadedImage->getSecurePath();
-        }
-
-        // 4. SIMPAN URL KE DATABASE
-        // Pastikan tabel database Anda punya kolom 'video_url' atau 'image_before'
-        Report::create([
-            'user_id' => Auth::id(),
-            'title' => $request->title ?? 'Laporan Baru',
-            'description' => $request->deskripsi ?? '-',
-            'location' => $request->location,
-            'status' => 'pending',
-            
-            // Kita simpan LINK CLOUDINARY, bukan path lokal
-            'video_url' => $videoUrl, 
-            'image_before' => $imageUrl, // Simpan URL foto Cloudinary di sini
-            
-            // Field lain sesuaikan kebutuhan (latitude/longitude bisa null dulu kalau ribet)
-            'latitude' => $request->latitude ?? null,
-            'longitude' => $request->longitude ?? null,
-        ]);
-
-        return redirect()->route('reports.index')->with('message', 'Laporan berhasil dikirim ke Cloudinary!');
+        return redirect()->route('reports.index')->with('message', 'Laporan berhasil dikirim!');
     }
 
     public function index()
     {
-        $reports = Report::where('user_id', Auth::id())->latest()->get();
+        $reports = Report::where('user_id', Auth::id())
+                    ->with('attachments') // Load data foto tambahan
+                    ->latest()
+                    ->get();
 
-        // Format data untuk Frontend
         $reports->transform(function ($report) {
             return [
                 'id' => $report->id,
                 'title' => $report->title,
                 'location' => $report->location,
                 'date' => $report->created_at->format('d M Y'),
-                
-                // PENTING: Karena sekarang isinya URL (https://...), kita tidak perlu tambah '/storage/' lagi
+                // Tampilkan foto pertama atau placeholder
                 'image_url' => $report->image_before ?? 'https://placehold.co/600x400?text=No+Image',
-                'video_url' => $report->video_url, // Kirim URL video ke frontend
-                
+                'video_url' => $report->video_url,
                 'status' => $report->status,
                 'progress' => $report->progress ?? 0,
                 'price' => $report->price ?? 'Menunggu Estimasi'
             ];
         });
 
-        return Inertia::render('Reports', ['reports' => $reports]);
+        return Inertia::render('Reports/Index', ['reports' => $reports]);
     }
 
     public function show($id)
     {
-        $report = Report::findOrFail($id);
+        // Load attachment saat detail dibuka
+        $report = Report::with('attachments')->findOrFail($id);
 
         if ($report->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Format data tunggal
-        $report->created_at_formatted = $report->created_at->format('d M Y');
-        
-        // Sama seperti index, langsung pakai URL dari database
-        $report->image_url = $report->image_before ?? 'https://placehold.co/600x400?text=No+Image';
-        
-        // Logic dummy price/progress
-        $report->price = 'Rp ' . number_format(rand(10000000, 50000000), 0, ',', '.');
-        $report->progress = match($report->status) {
-            'completed' => 100,
-            'process' => 50,
-            default => 0
-        };
-
         return Inertia::render('Reports/Show', [
-            'report' => $report
+            'report' => [
+                'id' => $report->id,
+                'title' => $report->title,
+                'description' => $report->description,
+                'location' => $report->location,
+                // List semua foto untuk slider/gallery di frontend
+                'attachments' => $report->attachments->map(fn($a) => $a->file_url), 
+                'image_url' => $report->image_before, 
+                'video_url' => $report->video_url,
+                'status' => $report->status,
+                'created_at_formatted' => $report->created_at->format('d M Y, H:i'),
+                'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi',
+                'progress' => $report->progress ?? 0,
+            ]
         ]);
     }
-    
-    // ... method cancel biarkan saja ...
 }

@@ -17,16 +17,22 @@ class Report extends Model
         'latitude',
         'longitude',
         'status',
+        'image_before', // Masih dipakai untuk menyimpan foto pertama sebagai "Thumbnail"
+        'video_url',    // URL Video dari Cloudinary
+        'price',
+        'progress',
     ];
 
-    // Relasi: Setiap laporan pasti milik satu User
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    // Relasi Baru: Satu laporan punya BANYAK attachment
+
+    // Relasi ke Foto-foto Tambahan
     public function attachments()
     {
+        // Pastikan kamu sudah membuat model ReportAttachment
         return $this->hasMany(ReportAttachment::class);
     }
 }

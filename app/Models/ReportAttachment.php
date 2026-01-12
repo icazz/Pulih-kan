@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
-// 👇 JANGAN LUPA BARIS INI (Import Library-nya)
-use Illuminate\Database\Eloquent\Factories\HasFactory; 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ReportAttachment extends Model
 {
-    use HasFactory; // Fitur ini butuh baris 'use' di atas tadi
+    use HasFactory;
 
-    protected $fillable = ['report_id', 'file_path', 'file_type'];
+    protected $fillable = [
+        'report_id',
+        'file_url',
+        'file_type', // 'image' atau 'video' (tapi video kita taruh di tabel utama aja biar simpel)
+    ];
 
     public function report()
     {

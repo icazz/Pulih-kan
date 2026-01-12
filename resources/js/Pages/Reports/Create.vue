@@ -8,6 +8,7 @@ import L from "leaflet";
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// Konfigurasi Icon Leaflet
 let DefaultIcon = L.icon({
     iconUrl: icon,
     shadowUrl: iconShadow,
@@ -21,9 +22,20 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const currentStep = ref(1);
 const estimasi = ref({ kategori: 'Ringan', biaya: 'Rp 0', layanan: 'Pembersihan Standar' });
 
+// --- REVISI 1: Update Struktur Form sesuai Backend ---
 const form = useForm({
-    provinsi: '', kota: '', alamat: '', luas_rumah: '', latitude: '', longitude: '',
-    kerusakan: [], foto: null, deskripsi: ''
+    title: '', // Judul Laporan (Wajib di Backend)
+    provinsi: '', 
+    kota: '', 
+    alamat: '', 
+    location: '', // Field gabungan untuk dikirim ke backend
+    luas_rumah: '', 
+    latitude: '', 
+    longitude: '',
+    kerusakan: [], 
+    photos: [], // REVISI: Ubah jadi Array untuk banyak foto
+    video: null, // REVISI: Tambah field khusus video
+    deskripsi: ''
 });
 
 const opsiKerusakan = [
@@ -36,7 +48,16 @@ const toggleKerusakan = (item) => {
     else form.kerusakan.push(item);
 };
 
-const handleFileUpload = (event) => { form.foto = event.target.files[0]; };
+// --- REVISI 2: Handler Upload Terpisah ---
+const handlePhotos = (event) => {
+    // Mengambil semua file yang dipilih user
+    form.photos = Array.from(event.target.files);
+};
+
+const handleVideo = (event) => {
+    // Mengambil satu file video
+    form.video = event.target.files[0];
+};
 
 const hitungEstimasi = () => {
     const jumlah = form.kerusakan.length;
@@ -51,10 +72,12 @@ const hitungEstimasi = () => {
 
 const nextStep = () => {
     if (currentStep.value === 1) {
-        if (!form.alamat || !form.provinsi || !form.kota || !form.luas_rumah || !form.latitude) {
-            alert("Mohon lengkapi data rumah dan lokasi."); return;
+        // Validasi Step 1
+        if (!form.title || !form.alamat || !form.provinsi || !form.kota || !form.latitude) {
+            alert("Mohon lengkapi judul, data rumah, dan titik lokasi."); return;
         }
     } else if (currentStep.value === 2) {
+        // Validasi Step 2
         if (form.kerusakan.length === 0 || !form.deskripsi) {
             alert("Mohon lengkapi data kerusakan."); return;
         }
@@ -71,9 +94,21 @@ const prevStep = () => {
     }
 };
 
+// --- REVISI 3: Submit Asli ke Backend ---
 const submitForm = () => {
-    alert("Laporan berhasil diajukan!");
-    console.log(form.data());
+    // Gabungkan alamat menjadi satu string 'location'
+    form.location = `${form.alamat}, ${form.kota}, ${form.provinsi}`;
+
+    form.post(route('reports.store'), {
+        forceFormData: true, // Wajib true untuk upload file
+        onSuccess: () => {
+            // alert("Laporan berhasil diajukan!"); // Bisa handle redirect dari controller
+        },
+        onError: (errors) => {
+            console.error(errors);
+            alert("Gagal mengirim laporan. Cek inputan Anda.");
+        }
+    });
 };
 
 onMounted(() => {
@@ -118,7 +153,6 @@ const initMap = () => {
 
         <div class="max-w-5xl mx-auto mt-12 mb-16 px-6">
             <div class="flex items-center justify-between relative w-full max-w-3xl mx-auto">
-                
                 <div class="absolute top-1/2 left-0 w-full h-[4px] bg-[#D6C5BA] z-0 transform -translate-y-1/2 rounded-full"></div>
 
                 <div class="relative z-10 bg-[#FFFFFA] px-3">
@@ -144,7 +178,6 @@ const initMap = () => {
                              :class="currentStep === 3 ? 'opacity-100' : 'opacity-60'">
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -152,19 +185,25 @@ const initMap = () => {
             
             <div v-show="currentStep === 1">
                 <h2 class="text-2xl font-bold text-black mb-6">Data Rumah</h2>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Judul Laporan</label>
+                    <input type="text" v-model="form.title" placeholder="Contoh: Atap Roboh Bagian Dapur" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm">
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
                         <select v-model="form.provinsi" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm cursor-pointer">
                             <option value="" disabled selected>Provinsi</option>
-                            <option value="jawa_timur">Jawa Timur</option>
-                            <option value="jawa_tengah">Jawa Tengah</option>
+                            <option value="Jawa Timur">Jawa Timur</option>
+                            <option value="Jawa Tengah">Jawa Tengah</option>
                         </select>
                     </div>
                     <div>
                         <select v-model="form.kota" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm cursor-pointer">
                             <option value="" disabled selected>Kecamatan / Kota</option>
-                            <option value="lamongan">Lamongan</option>
-                            <option value="surabaya">Surabaya</option>
+                            <option value="Lamongan">Lamongan</option>
+                            <option value="Surabaya">Surabaya</option>
                         </select>
                     </div>
                     <div><input type="text" v-model="form.alamat" placeholder="Alamat Lengkap" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>
@@ -196,18 +235,43 @@ const initMap = () => {
                         <span class="text-[#4F3726] font-medium select-none">{{ item }}</span>
                     </div>
                 </div>
-                <div class="mb-8">
-                    <label class="block text-[#716363] text-lg mb-2 font-medium">Unggah Foto / Video Kondisi</label>
-                    <div class="w-full h-32 border-2 border-dashed border-[#973C00] rounded-xl bg-[#FFFFFA] flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 transition relative">
-                        <input type="file" @change="handleFileUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*,video/*">
-                        <span class="text-[#973C00] font-bold text-lg mb-1">{{ form.foto ? 'File Terpilih: ' + form.foto.name : 'Klik untuk unggah' }}</span>
-                        <span v-if="!form.foto" class="text-gray-400 text-sm">Format: JPG, PNG, MP4</span>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label class="block text-[#716363] text-lg mb-2 font-medium">Unggah Foto (Bisa Banyak)</label>
+                        <div class="w-full h-32 border-2 border-dashed border-[#973C00] rounded-xl bg-[#FFFFFA] flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 transition relative overflow-hidden">
+                            <input type="file" multiple @change="handlePhotos" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*">
+                            <span class="text-[#973C00] font-bold text-lg mb-1">
+                                {{ form.photos.length > 0 ? form.photos.length + ' Foto Dipilih' : 'Pilih Foto-foto' }}
+                            </span>
+                            <span class="text-gray-400 text-sm">Format: JPG, PNG (Max 5MB/file)</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[#716363] text-lg mb-2 font-medium">Unggah Video (Opsional)</label>
+                        <div class="w-full h-32 border-2 border-dashed border-gray-400 rounded-xl bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition relative overflow-hidden">
+                            <input type="file" @change="handleVideo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="video/mp4,video/mov">
+                            <span class="text-gray-600 font-bold text-lg mb-1">
+                                {{ form.video ? '1 Video Dipilih' : 'Pilih Video Kondisi' }}
+                            </span>
+                            <span class="text-gray-400 text-sm">Format: MP4, MOV (Max 50MB)</span>
+                        </div>
                     </div>
                 </div>
+
+                <div v-if="form.progress" class="mb-6">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-[#973C00] h-2.5 rounded-full" :style="{ width: form.progress.percentage + '%' }"></div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Mengunggah... {{ form.progress.percentage }}%</p>
+                </div>
+
                 <div class="mb-10">
                     <label class="block text-[#716363] text-lg mb-2 font-medium">Deskripsikan Kerusakan secara Detail</label>
-                    <textarea v-model="form.deskripsi" rows="5" class="w-full bg-white border border-[#973C00] rounded-xl p-4 text-[#4F3726] focus:ring-2 focus:ring-[#973C00] shadow-sm" placeholder="Contoh: Tembok retak..."></textarea>
+                    <textarea v-model="form.deskripsi" rows="5" class="w-full bg-white border border-[#973C00] rounded-xl p-4 text-[#4F3726] focus:ring-2 focus:ring-[#973C00] shadow-sm" placeholder="Contoh: Tembok ruang tamu retak parah, atap dapur bocor saat hujan deras..."></textarea>
                 </div>
+
                 <div class="flex justify-between items-center mt-12">
                     <button @click="prevStep" class="flex items-center gap-2 text-[#696565] font-semibold hover:text-[#4F3726] transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali
@@ -237,14 +301,15 @@ const initMap = () => {
                 </div>
                 <div class="bg-white border border-yellow-400 rounded-2xl p-6 md:p-8 mb-10 shadow-sm bg-yellow-50/10">
                     <h2 class="text-xl font-bold text-[#1C1917] mb-3">Langkah Selanjutnya</h2>
-                    <p class="text-gray-600 leading-relaxed">Kami akan menghubungkan Anda dengan vendor terpercaya.</p>
+                    <p class="text-gray-600 leading-relaxed">Kami akan menghubungkan Anda dengan vendor terpercaya setelah Anda mengirimkan laporan ini.</p>
                 </div>
                 <div class="flex justify-between items-center mt-8">
                     <button @click="prevStep" class="flex items-center gap-2 text-[#696565] font-semibold hover:text-[#4F3726] transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali
                     </button>
-                    <button @click="submitForm" class="px-8 py-3 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2 bg-gradient-to-r from-[#552300] to-[#BB4D00]">
-                        Ajukan Pemulihan <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <button @click="submitForm" :disabled="form.processing" class="px-8 py-3 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2 bg-gradient-to-r from-[#552300] to-[#BB4D00] disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ form.processing ? 'Mengirim...' : 'Ajukan Pemulihan' }} 
+                        <svg v-if="!form.processing" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </button>
                 </div>
             </div>
