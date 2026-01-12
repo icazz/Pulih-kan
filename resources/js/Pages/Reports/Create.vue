@@ -94,19 +94,21 @@ const prevStep = () => {
     }
 };
 
-// --- REVISI 3: Submit Asli ke Backend ---
 const submitForm = () => {
-    // Gabungkan alamat menjadi satu string 'location'
+    // Pastikan lokasi tergabung
     form.location = `${form.alamat}, ${form.kota}, ${form.provinsi}`;
 
     form.post(route('reports.store'), {
-        forceFormData: true, // Wajib true untuk upload file
+        forceFormData: true,
         onSuccess: () => {
-            // alert("Laporan berhasil diajukan!"); // Bisa handle redirect dari controller
+            // Berhasil
         },
         onError: (errors) => {
-            console.error(errors);
-            alert("Gagal mengirim laporan. Cek inputan Anda.");
+            console.error("Error submit:", errors);
+            
+            // --- UBAH BAGIAN INI ---
+            // Tampilkan SEMUA error ke layar biar jelas
+            alert("Gagal! Error: " + JSON.stringify(errors, null, 2));
         }
     });
 };

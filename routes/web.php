@@ -7,13 +7,22 @@ use App\Http\Controllers\AdminController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
+Route::get('/test-env', function () {
+    try {
+        // Coba upload gambar dummy kecil dari internet
+        $uploaded = Cloudinary::upload('https://placehold.co/100x100.png');
+        return "SUKSES! Cloudinary Terbaca. URL: " . $uploaded->getSecurePath();
+    } catch (\Exception $e) {
+        return "GAGAL! Error: " . $e->getMessage();
+    }
+});
 // --- PUBLIC ROUTES ---
 Route::get('/', function () {
     return Inertia::render('Welcome', [

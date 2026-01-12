@@ -61,5 +61,16 @@ class ReportSeeder extends Seeder
             'status' => 'completed', // Badge Hijau
             'image_before' => null,
         ]);
+
+        Report::create([
+            'user_id' => $user->id,
+            'title' => 'Pemulihan Saluran Air Mampet',
+            'location' => 'Desa Turi, Lamongan',
+            'latitude' => '-7.110000',
+            'longitude' => '112.400000',
+            'description' => 'Saluran air depan rumah tersumbat sampah dan lumpur padat.',
+            'status' => 'verification', // Badge Hijau
+            'image_before' => null,
+        ]);
     }
 }
