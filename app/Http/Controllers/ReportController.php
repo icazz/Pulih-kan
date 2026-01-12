@@ -5,96 +5,84 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use App\Models\ReportAttachment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth; // Jangan lupa ini
 use Inertia\Inertia;
-// 1. Panggil Facade Cloudinary Lagi
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ReportController extends Controller
 {
+    // --- 1. HALAMAN CREATE (Formulir) ---
     public function create()
     {
-        return Inertia::render('Reports/Create');
+        return Inertia::render('Reports/Create', [
+            'auth' => [
+                'user' => Auth::user(), // Kirim data user agar Navbar tidak error
+            ]
+        ]);
     }
 
+    // --- 2. PROSES SIMPAN (Store) ---
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
             'location' => 'required|string',
-            'photos' => 'nullable|array',
-            'photos.*' => 'image|max:5120', // Max 5MB
+            'drive_link' => 'required|url',
         ]);
 
         try {
-            // 2. SIMPAN DATA LAPORAN KE DB
-            $report = Report::create([
+            Report::create([
                 'user_id' => Auth::id(),
                 'title' => $request->title,
-                'description' => $request->deskripsi ?? $request->description ?? '-',
+                'description' => $request->deskripsi ?? '-',
                 'location' => $request->location,
                 'status' => 'verification', 
-                'video_url' => null, 
-                'latitude' => $request->latitude ? $request->latitude : null,
-                'longitude' => $request->longitude ? $request->longitude : null,
+                'image_before' => $request->drive_link,
+                'video_url' => null,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
             ]);
 
-            // 3. UPLOAD KE CLOUDINARY
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $index => $photo) {
-                    
-                    // --- UPLOAD KE CLOUDINARY ---
-                    // Tidak perlu folder 'storage' lokal lagi
-                    $uploadedFile = Cloudinary::upload($photo->getRealPath(), [
-                        'folder' => 'laporan_banjir_foto'
-                    ]);
-                    
-                    // Ambil URL HTTPS Aman
-                    $secureUrl = $uploadedFile->getSecurePath();
-
-                    // Simpan ke Tabel Attachments
-                    ReportAttachment::create([
-                        'report_id' => $report->id,
-                        'file_url' => $secureUrl, // URL Cloudinary (https://res.cloudinary...)
-                        'file_type' => 'image',
-                    ]);
-
-                    // Update Thumbnail Laporan
-                    if ($index === 0) {
-                        $report->update(['image_before' => $secureUrl]);
-                    }
-                }
-            }
+            // REDIRECT KE /reports (INDEX) SESUAI REQUEST KAMU
+            return redirect()->route('reports.index')
+                             ->with('message', 'Laporan berhasil dikirim! Menunggu verifikasi.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['photos' => 'Gagal upload ke Cloudinary: ' . $e->getMessage()]);
+            return back()->withErrors(['drive_link' => 'Gagal menyimpan: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('reports.index')->with('message', 'Laporan berhasil dikirim!');
     }
 
-    // ... Index dan Show biarkan sama, karena frontend otomatis membaca URL ...
+    // --- 3. HALAMAN INDEX (Daftar Laporan) ---
     public function index()
     {
-        $reports = Report::where('user_id', Auth::id())->with('attachments')->latest()->get();
+        $reports = Report::where('user_id', Auth::id())->latest()->get();
+
         $reports->transform(function ($report) {
             return [
                 'id' => $report->id,
                 'title' => $report->title,
                 'location' => $report->location,
                 'date' => $report->created_at->format('d M Y'),
-                'image_url' => $report->image_before ?? 'https://placehold.co/600x400?text=No+Image',
+                'drive_link' => $report->image_before, 
                 'status' => $report->status,
                 'progress' => $report->progress ?? 0,
-                'price' => $report->price ?? 'Menunggu Estimasi'
+                'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi'
             ];
         });
-        return Inertia::render('Reports/Index', ['reports' => $reports]);
+
+        return Inertia::render('Reports/Index', [
+            'reports' => $reports,
+            // PENTING: Kirim Auth User disini agar tidak blank setelah redirect
+            'auth' => [
+                'user' => Auth::user(),
+            ]
+        ]);
     }
 
+    // --- 4. HALAMAN SHOW (Detail) ---
     public function show($id)
     {
-        $report = Report::with('attachments')->findOrFail($id);
+        $report = Report::findOrFail($id);
         if ($report->user_id !== Auth::id()) abort(403);
 
         return Inertia::render('Reports/Show', [
@@ -103,13 +91,49 @@ class ReportController extends Controller
                 'title' => $report->title,
                 'description' => $report->description,
                 'location' => $report->location,
-                'image_url' => $report->image_before,
-                'attachments' => $report->attachments->map(fn($a) => $a->file_url),
+                'drive_link' => $report->image_before,
                 'status' => $report->status,
                 'created_at_formatted' => $report->created_at->format('d M Y, H:i'),
                 'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi',
                 'progress' => $report->progress ?? 0,
+            ],
+            // PENTING: Kirim Auth User disini juga
+            'auth' => [
+                'user' => Auth::user(),
             ]
         ]);
+    }
+
+    // --- 5. HALAMAN PENAWARAN (Offer) ---
+    public function offer($id)
+    {
+        $report = Report::findOrFail($id);
+        if ($report->user_id !== Auth::id()) abort(403);
+
+        $formattedPrice = 'Rp ' . number_format($report->price ?? 0, 0, ',', '.');
+
+        return Inertia::render('Reports/Offer', [
+            'report' => $report,
+            'formattedPrice' => $formattedPrice,
+            // PENTING: Kirim Auth User disini juga
+            'auth' => [
+                'user' => Auth::user(),
+            ]
+        ]);
+    }
+
+    // --- 6. ACTION LAINNYA ---
+    public function cancel($id)
+    {
+        $report = Report::where('user_id', Auth::id())->findOrFail($id);
+        $report->update(['status' => 'cancelled']);
+        return back();
+    }
+
+    public function destroy($id)
+    {
+        $report = Report::where('user_id', Auth::id())->findOrFail($id);
+        $report->delete();
+        return redirect()->route('reports.index');
     }
 }

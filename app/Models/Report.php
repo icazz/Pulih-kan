@@ -17,8 +17,8 @@ class Report extends Model
         'latitude',
         'longitude',
         'status',
-        'image_before', // Masih dipakai untuk menyimpan foto pertama sebagai "Thumbnail"
-        'video_url',    // URL Video dari Cloudinary
+        'image_before',
+        'video_url',
         'price',
         'progress',
     ];

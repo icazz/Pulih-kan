@@ -122,8 +122,14 @@ const filteredReports = computed(() => {
                 </div>
 
                 <div class="p-6 flex flex-col md:flex-row gap-6">
-                    <div class="w-full md:w-56 h-48 rounded-2xl overflow-hidden flex-shrink-0 relative shadow-sm border border-gray-100">
-                        <img :src="report.image_url" class="w-full h-full object-cover">
+                    <div class="w-full md:w-56 h-48 rounded-2xl overflow-hidden flex-shrink-0 relative shadow-sm border border-gray-100 bg-gray-50 flex flex-col items-center justify-center group">
+                        <svg class="w-16 h-16 text-gray-400 mb-2 group-hover:scale-110 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                        
+                        <span class="text-xs text-gray-500 font-medium">Bukti di Google Drive</span>
+                        
+                        <a :href="report.drive_link" target="_blank" class="mt-3 px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-700 transition shadow-sm flex items-center gap-1">
+                            Buka <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
                     </div>
 
                     <div class="flex-grow flex flex-col justify-between py-1">
