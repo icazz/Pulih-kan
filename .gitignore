@@ -20,7 +20,6 @@ Thumbs.db
 /auth.json
 
 # --- BUILD ASSETS (Dibuat otomatis oleh Render) ---
-/public/build
 /public/hot
 /public/storage
 
