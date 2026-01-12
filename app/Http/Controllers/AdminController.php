@@ -10,21 +10,22 @@ class AdminController extends Controller
 {
     public function index()
     {
-        // Ambil semua laporan, urutkan terbaru, load data usernya
         $reports = Report::with('user')->latest()->get();
 
-        // Format data untuk frontend
         $reports->transform(function ($report) {
             return [
                 'id' => $report->id,
-                'user_name' => $report->user->name ?? 'User Tidak Dikenal', // Nama User
+                'user_name' => $report->user->name ?? 'User Tidak Dikenal',
                 'title' => $report->title,
+                'description' => $report->description,
                 'location' => $report->location,
                 'date' => $report->created_at->format('d M Y'),
-                'image_url' => $report->image_before ?? 'https://placehold.co/600x400?text=No+Image',
-                'drive_link' => $report->image_before, // Asumsi link drive disimpan disini
+                'drive_link' => $report->image_before,
                 'status' => $report->status,
+                'category' => $report->category ?? '-', // Kirim kategori
                 'progress' => $report->progress ?? 0,
+                // Kirim raw price (angka) untuk edit, dan formatted untuk display
+                'price_raw' => $report->price, 
                 'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Belum Ada Estimasi'
             ];
         });
@@ -38,12 +39,42 @@ class AdminController extends Controller
     {
         $report = Report::findOrFail($id);
         
-        $request->validate([
-            'status' => 'required|in:verification,pending,process,completed,cancelled'
-        ]);
+        // LOGIKA BARU SESUAI ALUR KAMU:
+        
+        // 1. Jika Admin melakukan VERIFIKASI (Input Harga & Kategori)
+        if ($request->action === 'verify') {
+            $request->validate([
+                'price' => 'required|numeric|min:0',
+                'category' => 'required|string',
+            ]);
 
-        $report->update(['status' => $request->status]);
+            $report->update([
+                'price' => $request->price,
+                'category' => $request->category,
+                'status' => 'pending' // Masuk ke Menunggu Pembayaran
+            ]);
+        }
 
-        return back()->with('message', 'Status laporan berhasil diperbarui!');
+        // 2. Jika Admin KONFIRMASI PEMBAYARAN
+        elseif ($request->action === 'confirm_payment') {
+            $report->update([
+                'status' => 'process' // Masuk ke Pengerjaan
+            ]);
+        }
+
+        // 3. Jika Admin MENYELESAIKAN PESANAN
+        elseif ($request->action === 'complete') {
+            $report->update([
+                'status' => 'completed',
+                'progress' => 100
+            ]);
+        }
+
+        // 4. Jika Admin MEMBATALKAN
+        elseif ($request->action === 'cancel') {
+            $report->update(['status' => 'cancelled']);
+        }
+
+        return back()->with('message', 'Laporan berhasil diperbarui!');
     }
 }

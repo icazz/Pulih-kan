@@ -17,6 +17,7 @@ class Report extends Model
         'latitude',
         'longitude',
         'status',
+        'category',
         'image_before',
         'video_url',
         'price',

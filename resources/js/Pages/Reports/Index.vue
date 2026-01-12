@@ -97,7 +97,6 @@ const filteredReports = computed(() => {
         <div class="max-w-6xl mx-auto px-6 space-y-6">
             
             <div v-if="filteredReports.length === 0" class="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
-                <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-box-4085812-3385481.png" alt="Empty" class="w-48 mx-auto opacity-50 mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Belum ada laporan</h3>
                 <p class="text-gray-500 mb-6">Anda belum memiliki pengajuan dengan status ini.</p>
                 <Link :href="route('reports.create')" class="text-[#BB4D00] font-bold hover:underline">Ajukan Sekarang</Link>

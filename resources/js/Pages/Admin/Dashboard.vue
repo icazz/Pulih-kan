@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -11,47 +11,75 @@ const props = defineProps({
 const searchQuery = ref('');
 const activeTab = ref('Semua');
 const tabs = ['Semua', 'Menunggu Verifikasi', 'Menunggu Pembayaran', 'Dalam Pengerjaan', 'Selesai', 'Dibatalkan'];
+const showModal = ref(false);
+const selectedReport = ref(null);
+
+// Form khusus untuk input data admin
+const form = useForm({
+    action: '', // verify, confirm_payment, complete, cancel
+    price: '',
+    category: '',
+});
 
 // --- LOGIC STATUS & WARNA ---
 const getStatusData = (status) => {
     const map = {
-        'verification': { label: 'Menunggu Verifikasi', class: 'bg-[#FF5722] text-white', tab: 'Menunggu Verifikasi' },
-        'pending':      { label: 'Menunggu Pembayaran', class: 'bg-[#CA8E31] text-white', tab: 'Menunggu Pembayaran' },
-        'process':      { label: 'Dalam Pengerjaan',    class: 'bg-[#4688FB] text-white', tab: 'Dalam Pengerjaan' },
-        'completed':    { label: 'Selesai',             class: 'bg-[#09A600] text-white', tab: 'Selesai' },
-        'cancelled':    { label: 'Dibatalkan',          class: 'bg-red-500 text-white',   tab: 'Dibatalkan' },
+        'verification': { label: 'Perlu Verifikasi', class: 'bg-red-100 text-red-600 border-red-200', tab: 'Menunggu Verifikasi' },
+        'pending':      { label: 'Menunggu Pembayaran', class: 'bg-orange-100 text-orange-600 border-orange-200', tab: 'Menunggu Pembayaran' },
+        'process':      { label: 'Dalam Pengerjaan',    class: 'bg-blue-100 text-blue-600 border-blue-200', tab: 'Dalam Pengerjaan' },
+        'completed':    { label: 'Selesai',             class: 'bg-green-100 text-green-600 border-green-200', tab: 'Selesai' },
+        'cancelled':    { label: 'Dibatalkan',          class: 'bg-gray-100 text-gray-600 border-gray-200',   tab: 'Dibatalkan' },
     };
     return map[status] || map['verification'];
 };
 
-// --- LOGIC GANTI STATUS (ADMIN ACTION) ---
-const changeStatus = (id, newStatus) => {
-    if (confirm(`Ubah status laporan REQ-${id} menjadi ${newStatus}?`)) {
-        router.patch(route('admin.updateStatus', id), {
-            status: newStatus
-        }, {
-            preserveScroll: true
-        });
-    }
+// --- MODAL LOGIC ---
+const openDetail = (report) => {
+    selectedReport.value = report;
+    // Reset form value
+    form.price = report.price_raw || '';
+    form.category = report.category !== '-' ? report.category : '';
+    showModal.value = true;
+};
+
+const closeModal = () => {
+    showModal.value = false;
+    selectedReport.value = null;
+    form.reset();
+};
+
+const submitAction = (action) => {
+    if (!selectedReport.value) return; // Pastikan ada laporan yang dipilih
+    if (!confirm('Apakah Anda yakin ingin memproses tindakan ini?')) return;
+
+    form.action = action;
+
+    // KITA GUNAKAN URL MANUAL AGAR PASTI BENAR (Hapus route() helper)
+    // Format: /admin/reports/{id}/status
+    const url = `/admin/reports/${selectedReport.value.id}/status`;
+
+    form.patch(url, {
+        onSuccess: () => {
+            closeModal();
+            // Opsional: alert('Berhasil!');
+        },
+        onError: (errors) => {
+            console.error(errors);
+            alert('Terjadi kesalahan saat menyimpan.');
+        },
+        preserveScroll: true
+    });
 };
 
 // --- FILTERING ---
 const filteredReports = computed(() => {
     let data = props.reports;
-
-    // Filter Tab
     if (activeTab.value !== 'Semua') {
         data = data.filter(r => getStatusData(r.status).tab === activeTab.value);
     }
-
-    // Filter Search
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
-        data = data.filter(r => 
-            r.title.toLowerCase().includes(q) || 
-            r.user_name.toLowerCase().includes(q) ||
-            r.id.toString().includes(q)
-        );
+        data = data.filter(r => r.title.toLowerCase().includes(q) || r.user_name.toLowerCase().includes(q) || r.id.toString().includes(q));
     }
     return data;
 });
@@ -60,123 +88,152 @@ const filteredReports = computed(() => {
 <template>
     <Head title="Admin Dashboard" />
 
-    <div class="min-h-screen bg-[#FFFDF8] font-['Montserrat']">
+    <div class="min-h-screen bg-[#FFFDF8] font-['Montserrat'] relative">
         
         <nav class="absolute top-0 w-full flex justify-between items-center px-8 py-6 z-20">
-            <div class="text-white font-bold text-xl tracking-wide opacity-0">.</div> <Link :href="route('logout')" method="post" as="button" class="flex items-center gap-2 text-white hover:text-gray-200 transition bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">
+            <div class="text-white font-bold text-xl">PULIH.KAN ADMIN</div>
+            <Link :href="route('logout')" method="post" as="button" class="flex items-center gap-2 text-white hover:text-gray-200 transition bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm">
                 <span class="font-semibold">Logout</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </Link>
         </nav>
 
         <div class="w-full bg-[linear-gradient(to_bottom,#A0522D,#D2691E)] pt-32 pb-24 px-6 relative shadow-lg">
-            <div class="max-w-6xl mx-auto relative z-10 flex justify-between items-end">
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">Selamat Datang, Admin!</h1>
-                    <p class="text-white/90 text-lg">Kelola pengajuan, verifikasi kerusakan, dan pantau progres pemulihan rumah dalam satu dashboard.</p>
-                </div>
-                <div class="hidden md:block text-white/80">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                </div>
+            <div class="max-w-6xl mx-auto relative z-10">
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">Selamat Datang, Admin!</h1>
+                <p class="text-white/90 text-lg">Kelola pengajuan dan pantau progres pemulihan.</p>
             </div>
         </div>
 
         <div class="max-w-6xl mx-auto px-6 -mt-8 relative z-20">
             <div class="relative shadow-md rounded-xl">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input v-model="searchQuery" type="text" placeholder="Cari nama client, nomor pengajuan..." class="w-full py-4 pl-12 pr-4 rounded-xl border-none focus:ring-2 focus:ring-[#BB4D00] text-gray-700 bg-white">
+                <input v-model="searchQuery" type="text" placeholder="Cari nama client atau ID..." class="w-full py-4 pl-6 pr-4 rounded-xl border-none focus:ring-2 focus:ring-[#BB4D00] text-gray-700 bg-white">
             </div>
         </div>
 
-        <div class="max-w-6xl mx-auto px-6 mt-8">
-            <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
-                <button 
-                    v-for="tab in tabs" :key="tab" 
-                    @click="activeTab = tab"
-                    class="px-4 py-2 text-sm font-semibold transition-all rounded-t-lg"
-                    :class="activeTab === tab ? 'text-[#BB4D00] border-b-2 border-[#BB4D00] bg-orange-50' : 'text-gray-500 hover:text-[#BB4D00]'"
-                >
-                    {{ tab }}
-                </button>
+        <div class="max-w-6xl mx-auto px-6 mt-8 overflow-x-auto">
+            <div class="flex gap-2 border-b border-gray-200 pb-2 min-w-max">
+                <button v-for="tab in tabs" :key="tab" @click="activeTab = tab" class="px-4 py-2 text-sm font-semibold transition-all rounded-t-lg" :class="activeTab === tab ? 'text-[#BB4D00] border-b-2 border-[#BB4D00] bg-orange-50' : 'text-gray-500 hover:text-[#BB4D00]'">{{ tab }}</button>
             </div>
         </div>
 
-        <div class="max-w-6xl mx-auto px-6 py-8 space-y-6">
-            
-            <div v-if="filteredReports.length === 0" class="text-center py-20 text-gray-400">
-                <p>Tidak ada laporan ditemukan.</p>
-            </div>
+        <div class="max-w-6xl mx-auto px-6 py-8 space-y-4">
+            <div v-if="filteredReports.length === 0" class="text-center py-20 text-gray-400">Tidak ada laporan.</div>
 
-            <div v-for="report in filteredReports" :key="report.id" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
+            <div v-for="report in filteredReports" :key="report.id" @click="openDetail(report)" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow-md transition cursor-pointer group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#BB4D00] group-hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-lg group-hover:text-[#BB4D00] transition">{{ report.title }}</h3>
+                        <p class="text-sm text-gray-500">Client: {{ report.user_name }} • ID: REQ-{{ report.id }}</p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                    <span :class="`px-3 py-1 rounded-full text-xs font-bold border ${getStatusData(report.status).class}`">
+                        {{ getStatusData(report.status).label }}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ report.date }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 
-                <div class="w-full md:w-64 h-48 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center relative group">
-                    <div class="text-center">
-                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                        <span class="text-xs text-gray-500 block">Bukti di Google Drive</span>
-                        <a v-if="report.drive_link" :href="report.drive_link" target="_blank" class="mt-2 inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Buka</a>
+                <div class="bg-[#28160A] p-6 flex justify-between items-start sticky top-0 z-10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Detail Pengajuan</h2>
+                        <p class="text-white/70 text-sm">REQ-{{ selectedReport.id }} • {{ selectedReport.user_name }}</p>
                     </div>
+                    <button @click="closeModal" class="text-white/70 hover:text-white text-2xl">&times;</button>
                 </div>
 
-                <div class="flex-grow flex flex-col">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[#BB4D00] font-bold flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Pengajuan REQ-{{ report.id }}
-                        </span>
-                        
-                        <div class="relative group">
-                            <button :class="`${getStatusData(report.status).class} px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2`">
-                                {{ getStatusData(report.status).label }}
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden hidden group-hover:block z-50">
-                                <div class="p-2 text-xs text-gray-400 font-semibold uppercase tracking-wider">Ubah Status</div>
-                                <button @click="changeStatus(report.id, 'verification')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Menunggu Verifikasi</button>
-                                <button @click="changeStatus(report.id, 'pending')" class="block w-full text-left px-4 py-2 text-sm text-[#CA8E31] hover:bg-orange-50">Menunggu Pembayaran</button>
-                                <button @click="changeStatus(report.id, 'process')" class="block w-full text-left px-4 py-2 text-sm text-[#4688FB] hover:bg-blue-50">Dalam Pengerjaan</button>
-                                <button @click="changeStatus(report.id, 'completed')" class="block w-full text-left px-4 py-2 text-sm text-[#09A600] hover:bg-green-50">Selesai</button>
-                                <button @click="changeStatus(report.id, 'cancelled')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Batalkan</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ report.title }}</h2>
+                <div class="p-6 space-y-6">
                     
-                    <div class="space-y-1 mb-4">
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            <span class="font-medium">Client: {{ report.user_name }}</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <label class="text-xs text-gray-400 font-bold uppercase">Judul</label>
+                            <p class="text-gray-800 font-semibold">{{ selectedReport.title }}</p>
                         </div>
-                        <div class="flex items-center gap-2 text-gray-500 text-sm">
-                            <svg class="w-4 h-4 text-[#F54900]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            {{ report.location }}
-                        </div>
-                        <div class="flex items-center gap-2 text-gray-500 text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            {{ report.date }}
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <label class="text-xs text-gray-400 font-bold uppercase">Lokasi</label>
+                            <p class="text-gray-800 text-sm">{{ selectedReport.location }}</p>
                         </div>
                     </div>
+                    
+                    <div>
+                        <label class="text-xs text-gray-400 font-bold uppercase">Deskripsi Kerusakan</label>
+                        <p class="text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-100 mt-1 text-sm leading-relaxed">{{ selectedReport.description }}</p>
+                    </div>
 
-                    <div class="mt-auto flex justify-between items-end border-t pt-4">
-                        <div class="w-1/2">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Progress Pekerjaan</span>
-                                <span class="text-[#F54900] font-bold">{{ report.progress }}%</span>
+                    <div>
+                        <label class="text-xs text-gray-400 font-bold uppercase">Bukti Foto/Video</label>
+                        <a :href="selectedReport.drive_link" target="_blank" class="flex items-center gap-2 mt-1 text-blue-600 hover:underline font-medium p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            Buka Link Google Drive
+                        </a>
+                    </div>
+
+                    <hr class="border-gray-200">
+
+                    <div>
+                        <h3 class="font-bold text-[#BB4D00] text-lg mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Tindakan Admin
+                        </h3>
+
+                        <div v-if="selectedReport.status === 'verification'" class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                            <p class="text-sm text-orange-800 mb-4 font-medium">Silakan lakukan penilaian awal untuk pengajuan ini.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Kerusakan</label>
+                                    <select v-model="form.category" class="w-full rounded-lg border-gray-300 focus:ring-[#BB4D00]">
+                                        <option value="" disabled>Pilih Kategori</option>
+                                        <option value="Ringan">Ringan</option>
+                                        <option value="Sedang">Sedang</option>
+                                        <option value="Berat">Berat</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Estimasi Biaya (Rp)</label>
+                                    <input v-model="form.price" type="number" placeholder="Contoh: 5000000" class="w-full rounded-lg border-gray-300 focus:ring-[#BB4D00]">
+                                </div>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                <div class="bg-[#F54900] h-1.5 rounded-full" :style="{ width: report.progress + '%' }"></div>
+                            
+                            <div class="flex gap-2">
+                                <button @click="submitAction('verify')" :disabled="form.processing || !form.price || !form.category" class="flex-1 bg-[#BB4D00] text-white py-3 rounded-lg font-bold hover:bg-[#973C00] transition disabled:opacity-50">
+                                    Verifikasi & Kirim Penawaran
+                                </button>
+                                <button @click="submitAction('cancel')" class="px-4 py-3 bg-red-100 text-red-600 rounded-lg font-bold hover:bg-red-200 transition">Tolak</button>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-400">Total Biaya</p>
-                            <p class="text-xl font-bold text-[#BB4D00]">{{ report.price }}</p>
+
+                        <div v-else-if="selectedReport.status === 'pending'" class="bg-blue-50 p-5 rounded-xl border border-blue-200 text-center">
+                            <p class="text-blue-800 font-bold text-lg mb-2">Rp {{ parseInt(form.price).toLocaleString('id-ID') }}</p>
+                            <p class="text-sm text-blue-600 mb-4">User telah menerima penawaran. Verifikasi jika pembayaran sudah diterima.</p>
+                            <button @click="submitAction('confirm_payment')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                                Konfirmasi Pembayaran Diterima
+                            </button>
                         </div>
+
+                        <div v-else-if="selectedReport.status === 'process'" class="bg-green-50 p-5 rounded-xl border border-green-200 text-center">
+                            <p class="text-sm text-green-700 mb-4">Proyek sedang berjalan. Tandai selesai jika vendor sudah menyelesaikan pekerjaan.</p>
+                            <button @click="submitAction('complete')" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">
+                                Tandai Pesanan Selesai
+                            </button>
+                        </div>
+
+                        <div v-else class="text-center p-4 bg-gray-50 rounded-xl text-gray-500">
+                            <p class="font-bold">Laporan ini telah selesai atau dibatalkan.</p>
+                            <p class="text-sm mt-1">Tidak ada tindakan lebih lanjut diperlukan.</p>
+                        </div>
+
                     </div>
                 </div>
             </div>
-
         </div>
+
     </div>
 </template>
