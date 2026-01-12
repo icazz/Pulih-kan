@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.js',
+            input: ['resources/js/app.js'], // Gunakan array untuk fleksibilitas
             refresh: true,
         }),
         vue({
@@ -17,4 +17,14 @@ export default defineConfig({
             },
         }),
     ],
+    // Tambahkan bagian ini untuk memastikan build lebih stabil di cloud
+    build: {
+        chunkSizeWarningLimit: 1600,
+        manifest: true,
+    },
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+        },
+    },
 });

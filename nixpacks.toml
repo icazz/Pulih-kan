@@ -5,7 +5,8 @@ nixPkgs = ["php83", "php83Packages.composer", "nodejs_20"]
 cmds = [
     "composer install --no-dev",
     "npm install",
-    "npm run build"
+    "npm run build",
+    "ls -la public/build" # Untuk memverifikasi di log kalau file build sudah jadi
 ]
 
 [start]
