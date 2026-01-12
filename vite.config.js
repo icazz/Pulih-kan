@@ -21,6 +21,12 @@ export default defineConfig({
     build: {
         chunkSizeWarningLimit: 1600,
         manifest: true,
+        outDir: 'public/build', // Memastikan folder output benar
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
     },
     resolve: {
         alias: {
