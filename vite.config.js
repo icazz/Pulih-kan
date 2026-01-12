@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.js'], // Gunakan array untuk fleksibilitas
+            input: 'resources/js/app.js',
             refresh: true,
         }),
         vue({
@@ -17,20 +17,5 @@ export default defineConfig({
             },
         }),
     ],
-    // Tambahkan bagian ini untuk memastikan build lebih stabil di cloud
-    build: {
-        chunkSizeWarningLimit: 1600,
-        manifest: true,
-        outDir: 'public/build', // Memastikan folder output benar
-        rollupOptions: {
-            output: {
-                manualChunks: undefined,
-            },
-        },
-    },
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-        },
-    },
+    // Hapus bagian build manifest manual tadi agar kembali ke standar
 });
