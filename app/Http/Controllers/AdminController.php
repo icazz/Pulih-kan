@@ -39,42 +39,31 @@ class AdminController extends Controller
     {
         $report = Report::findOrFail($id);
         
-        // LOGIKA BARU SESUAI ALUR KAMU:
-        
-        // 1. Jika Admin melakukan VERIFIKASI (Input Harga & Kategori)
+        // --- LOGIKA UPDATE STATUS (Sama seperti sebelumnya) ---
         if ($request->action === 'verify') {
             $request->validate([
                 'price' => 'required|numeric|min:0',
                 'category' => 'required|string',
             ]);
-
             $report->update([
                 'price' => $request->price,
                 'category' => $request->category,
-                'status' => 'pending' // Masuk ke Menunggu Pembayaran
+                'status' => 'pending'
             ]);
         }
-
-        // 2. Jika Admin KONFIRMASI PEMBAYARAN
         elseif ($request->action === 'confirm_payment') {
-            $report->update([
-                'status' => 'process' // Masuk ke Pengerjaan
-            ]);
+            $report->update(['status' => 'process']);
         }
-
-        // 3. Jika Admin MENYELESAIKAN PESANAN
         elseif ($request->action === 'complete') {
-            $report->update([
-                'status' => 'completed',
-                'progress' => 100
-            ]);
+            $report->update(['status' => 'completed', 'progress' => 100]);
         }
-
-        // 4. Jika Admin MEMBATALKAN
         elseif ($request->action === 'cancel') {
             $report->update(['status' => 'cancelled']);
         }
 
-        return back()->with('message', 'Laporan berhasil diperbarui!');
+        // --- PERBAIKAN DI SINI ---
+        // Gunakan parameter ke-3 (303) untuk memaksa browser menggunakan GET saat redirect.
+        return to_route('admin.dashboard', [], 303)
+                ->with('message', 'Laporan berhasil diperbarui!');
     }
 }

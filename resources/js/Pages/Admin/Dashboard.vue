@@ -49,25 +49,24 @@ const closeModal = () => {
 };
 
 const submitAction = (action) => {
-    if (!selectedReport.value) return; // Pastikan ada laporan yang dipilih
-    if (!confirm('Apakah Anda yakin ingin memproses tindakan ini?')) return;
+    if (!selectedReport.value) return;
+    if (!confirm('Apakah Anda yakin?')) return;
 
     form.action = action;
 
-    // KITA GUNAKAN URL MANUAL AGAR PASTI BENAR (Hapus route() helper)
-    // Format: /admin/reports/{id}/status
+    // PASTIKAN URL MANUAL SEPERTI INI:
     const url = `/admin/reports/${selectedReport.value.id}/status`;
 
     form.patch(url, {
         onSuccess: () => {
-            closeModal();
-            // Opsional: alert('Berhasil!');
+            closeModal(); // Menutup modal
+            // Inertia otomatis akan me-refresh data di background
         },
-        onError: (errors) => {
-            console.error(errors);
-            alert('Terjadi kesalahan saat menyimpan.');
+        onError: (e) => {
+            console.error(e);
+            alert('Gagal menyimpan perubahan.');
         },
-        preserveScroll: true
+        preserveScroll: true // Agar layar tidak loncat ke atas
     });
 };
 

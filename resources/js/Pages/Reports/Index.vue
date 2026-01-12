@@ -1,10 +1,10 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import Navbar from '@/Components/Navbar.vue';
 
 const { props } = usePage();
+// Menggunakan props dari usePage agar sinkron dengan data auth yang dikirim Controller
 const user = props.auth.user; 
 
 const propsData = defineProps({
@@ -15,17 +15,24 @@ const propsData = defineProps({
 const searchQuery = ref('');
 const activeTab = ref('Semua');
 
-// MENAMBAHKAN TAB "Menunggu Verifikasi"
-const tabs = ['Semua', 'Menunggu Verifikasi', 'Menunggu Pembayaran', 'Dalam Pengerjaan', 'Selesai'];
+// --- UPDATE DI SINI: MENAMBAHKAN "Dibatalkan" ---
+const tabs = [
+    'Semua', 
+    'Menunggu Verifikasi', 
+    'Menunggu Pembayaran', 
+    'Dalam Pengerjaan', 
+    'Selesai', 
+    'Dibatalkan' // <--- Tab Baru
+];
 
 // --- LOGIC STATUS BADGE ---
 const getStatusBadge = (status) => {
     const map = {
-        'verification': { label: 'Menunggu Verifikasi', class: 'bg-gray-500' }, // TAMBAHAN
-        'pending':   { label: 'Menunggu Pembayaran', class: 'bg-[#CA8E31]' },
-        'process':   { label: 'Dalam Pengerjaan',    class: 'bg-[#4688FB]' },
-        'completed': { label: 'Selesai',             class: 'bg-[#09A600]' },
-        'cancelled': { label: 'Dibatalkan',          class: 'bg-red-500' },
+        'verification': { label: 'Menunggu Verifikasi', class: 'bg-gray-500' }, 
+        'pending':      { label: 'Menunggu Pembayaran', class: 'bg-[#CA8E31]' },
+        'process':      { label: 'Dalam Pengerjaan',    class: 'bg-[#4688FB]' },
+        'completed':    { label: 'Selesai',             class: 'bg-[#09A600]' },
+        'cancelled':    { label: 'Dibatalkan',          class: 'bg-red-500' }, // Warna Merah untuk Batal
     };
     // Default fallback
     return map[status] || map['verification'];
@@ -45,7 +52,8 @@ const filteredReports = computed(() => {
         const lowerQ = searchQuery.value.toLowerCase();
         data = data.filter(r => 
             r.title.toLowerCase().includes(lowerQ) || 
-            r.location.toLowerCase().includes(lowerQ)
+            r.location.toLowerCase().includes(lowerQ) ||
+            r.id.toString().includes(lowerQ)
         );
     }
     return data;
@@ -86,9 +94,9 @@ const filteredReports = computed(() => {
             </div>
         </div>
 
-        <div class="max-w-6xl mx-auto px-6 mt-8 mb-6">
-            <div class="flex flex-wrap gap-2">
-                <button v-for="tab in tabs" :key="tab" @click="activeTab = tab" class="px-5 py-2 rounded-full text-sm font-semibold transition-all border" :class="activeTab === tab ? 'bg-[#F54900] text-white border-[#F54900]' : 'bg-white text-gray-600 border-[#E5E7EB] hover:bg-gray-50'">
+        <div class="max-w-6xl mx-auto px-6 mt-8 mb-6 overflow-x-auto pb-2">
+            <div class="flex flex-nowrap md:flex-wrap gap-2 min-w-max">
+                <button v-for="tab in tabs" :key="tab" @click="activeTab = tab" class="px-5 py-2 rounded-full text-sm font-semibold transition-all border whitespace-nowrap" :class="activeTab === tab ? 'bg-[#F54900] text-white border-[#F54900]' : 'bg-white text-gray-600 border-[#E5E7EB] hover:bg-gray-50'">
                     {{ tab }}
                 </button>
             </div>
@@ -97,9 +105,9 @@ const filteredReports = computed(() => {
         <div class="max-w-6xl mx-auto px-6 space-y-6">
             
             <div v-if="filteredReports.length === 0" class="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
-                <h3 class="text-xl font-bold text-gray-800">Belum ada laporan</h3>
-                <p class="text-gray-500 mb-6">Anda belum memiliki pengajuan dengan status ini.</p>
-                <Link :href="route('reports.create')" class="text-[#BB4D00] font-bold hover:underline">Ajukan Sekarang</Link>
+                <h3 class="text-xl font-bold text-gray-800">Tidak ada laporan</h3>
+                <p class="text-gray-500 mb-6">Tidak ada pengajuan ditemukan di tab "{{ activeTab }}".</p>
+                <Link v-if="activeTab === 'Semua'" :href="route('reports.create')" class="text-[#BB4D00] font-bold hover:underline">Ajukan Sekarang</Link>
             </div>
 
             <div 
