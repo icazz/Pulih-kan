@@ -64,4 +64,19 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
 });
 
+// --- ROUTE DARURAT (Hanya untuk update database) ---
+Route::get('/update-database-darurat', function () {
+    try {
+        // Jalanin migrasi database (tambah kolom baru)
+        \Illuminate\Support\Facades\Artisan::call('migrate --force');
+        
+        // Bersihin cache biar settingan baru kebaca
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        
+        return "<h1>BERHASIL! ✅</h1><p>Database sudah di-update. Kolom video_url sudah ditambahkan.</p>";
+    } catch (\Exception $e) {
+        return "<h1>GAGAL ❌</h1><p>" . $e->getMessage() . "</p>";
+    }
+});
+
 require __DIR__.'/auth.php';
