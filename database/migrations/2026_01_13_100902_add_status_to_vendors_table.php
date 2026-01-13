@@ -10,45 +10,50 @@ return new class extends Migration
     {
         Schema::table('vendors', function (Blueprint $table) {
             
-            // 1. FIX KRUSIAL: Cek & Buat 'nama_mitra' jika hilang
-            // Hapus 'after' agar tidak error SQLSTATE[42S22]
+            // 1. Identitas Dasar
             if (!Schema::hasColumn('vendors', 'nama_mitra')) {
                 $table->string('nama_mitra')->nullable();
             }
-
-            // 2. Cek & Buat kolom EMAIL
             if (!Schema::hasColumn('vendors', 'email')) {
                 $table->string('email')->nullable();
             }
-
-            // 3. Cek & Buat kolom NO TELEPON
             if (!Schema::hasColumn('vendors', 'no_telepon')) {
                 $table->string('no_telepon')->nullable();
             }
 
-            // 4. Cek & Buat kolom LOKASI
+            // 2. Jasa & Layanan (INI YANG BIKIN ERROR SEBELUMNYA)
+            if (!Schema::hasColumn('vendors', 'jenis_jasa')) {
+                // Simpan array sebagai JSON/Text
+                $table->json('jenis_jasa')->nullable(); 
+            }
+            if (!Schema::hasColumn('vendors', 'jasa_lainnya')) {
+                $table->string('jasa_lainnya')->nullable();
+            }
+
+            // 3. Lokasi & Alamat
             if (!Schema::hasColumn('vendors', 'provinsi')) {
                 $table->string('provinsi')->nullable();
+            }
+            if (!Schema::hasColumn('vendors', 'kota')) {
                 $table->string('kota')->nullable();
             }
-            
-            // 5. Cek Alamat (Jaga-jaga jika hilang juga)
             if (!Schema::hasColumn('vendors', 'alamat')) {
                 $table->text('alamat')->nullable();
             }
-
-            // 6. Cek Koordinat
             if (!Schema::hasColumn('vendors', 'latitude')) {
                 $table->string('latitude')->nullable();
+            }
+            if (!Schema::hasColumn('vendors', 'longitude')) {
                 $table->string('longitude')->nullable();
             }
 
-            // 7. Buat kolom STATUS (Tujuan utama)
+            // 4. Status & Persetujuan
+            if (!Schema::hasColumn('vendors', 'agreement')) {
+                $table->boolean('agreement')->default(false);
+            }
             if (!Schema::hasColumn('vendors', 'status')) {
                 $table->string('status')->default('pending');
             }
-            
-            // 8. Cek is_verified
             if (!Schema::hasColumn('vendors', 'is_verified')) {
                 $table->boolean('is_verified')->default(false);
             }
@@ -58,8 +63,14 @@ return new class extends Migration
     public function down()
     {
         Schema::table('vendors', function (Blueprint $table) {
-            // Daftar kolom yang mungkin ingin dihapus saat rollback
-            $columns = ['status', 'email', 'no_telepon', 'provinsi', 'kota', 'nama_mitra', 'latitude', 'longitude'];
+            // Hapus kolom jika rollback
+            $columns = [
+                'nama_mitra', 'email', 'no_telepon', 
+                'jenis_jasa', 'jasa_lainnya',
+                'provinsi', 'kota', 'alamat', 'latitude', 'longitude',
+                'agreement', 'status', 'is_verified'
+            ];
+            
             foreach ($columns as $col) {
                 if (Schema::hasColumn('vendors', $col)) {
                     $table->dropColumn($col);
