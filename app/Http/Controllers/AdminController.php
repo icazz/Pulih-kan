@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -31,8 +32,31 @@ class AdminController extends Controller
         });
 
         return Inertia::render('Admin/Dashboard', [
-            'reports' => $reports
+            'reports' => \App\Models\Report::with('user')->latest()->get(),
+            // UBAH INI: Ambil semua vendor (hapus where is_verified false)
+            // Agar kita bisa filter sendiri di frontend (Menunggu/Verified/Rejected)
+            'vendors' => \App\Models\Vendor::latest()->get(),
         ]);
+    }
+
+    public function verifyVendor(Request $request, $id)
+    {
+        $vendor = \App\Models\Vendor::findOrFail($id);
+
+        if ($request->status === 'approve') {
+            $vendor->update([
+                'status' => 'verified',
+                'is_verified' => true 
+            ]);
+            return redirect()->back()->with('message', 'Mitra berhasil disetujui.');
+        } else {
+            // Jangan dihapus, tapi ubah status jadi rejected
+            $vendor->update([
+                'status' => 'rejected',
+                'is_verified' => false
+            ]);
+            return redirect()->back()->with('message', 'Mitra ditolak.');
+        }
     }
 
     public function updateStatus(Request $request, $id)

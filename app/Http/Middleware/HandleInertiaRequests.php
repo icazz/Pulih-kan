@@ -29,11 +29,23 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'is_admin' => $request->user()->is_admin,
+                    'vendor' => $request->user()->vendor ? [
+                        'nama_mitra' => $request->user()->vendor->nama_mitra,
+                        'status' => $request->user()->vendor->status, // PENTING: Kirim status ini
+                        'is_verified' => $request->user()->vendor->is_verified,
+                    ] : null,
+                ] : null,
             ],
-        ];
+            // Jangan lupa flash message agar notifikasi sukses muncul
+            'flash' => [
+                'message' => fn () => $request->session()->get('message')
+            ],
+        ]);
     }
 }

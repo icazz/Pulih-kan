@@ -9,20 +9,36 @@ class Vendor extends Model
 {
     use HasFactory;
 
-    // Kolom apa saja yang boleh diisi secara massal
     protected $fillable = [
         'user_id',
-        'shop_name',
-        'description',
-        'service_type',
-        'address',
+        'nama_mitra',    // Sebelumnya shop_name
+        'no_telepon',    // Tambahan baru
+        'email',         // Tambahan baru
+        'jenis_jasa',    // Sebelumnya service_type
+        'jasa_lainnya',  // Deskripsi untuk opsi "Lainnya"
+        'provinsi',      // Tambahan baru
+        'kota',          // Tambahan baru
+        'alamat',        // Sebelumnya address
         'latitude',
         'longitude',
         'is_verified',
-        'ktp_photo_path',
+        'agreement',     // Status persetujuan user
+        'status',
     ];
 
-    // Relasi Kebalikannya: Vendor ini milik siapa?
+    /**
+     * Casting data agar Laravel otomatis mengubah 
+     * JSON di database menjadi Array di kodingan PHP.
+     */
+    protected $casts = [
+        'jenis_jasa' => 'array',
+        'is_verified' => 'boolean',
+        'agreement' => 'boolean',
+    ];
+
+    /**
+     * Relasi: Vendor milik seorang User
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

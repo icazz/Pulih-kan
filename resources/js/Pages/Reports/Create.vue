@@ -144,6 +144,11 @@ const initMap = () => {
                         <img src="/images/step-2-alert.png" class="w-8 h-8 object-contain brightness-0 invert" :class="currentStep === 2 ? 'opacity-100' : 'opacity-60'">
                     </div>
                 </div>
+                <div class="relative z-10 bg-[#FFFFFA] px-3">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shadow-sm bg-[#D6C5BA] border-[#D6C5BA]">
+                        <img src="/images/step-3-file.png" class="w-8 h-8 object-contain brightness-0 invert opacity-60">
+                    </div>
+                </div>
             </div>
         </div>
 

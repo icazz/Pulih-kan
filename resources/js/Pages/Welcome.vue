@@ -77,11 +77,32 @@ const user = computed(() => page.props.auth.user);
                     </Link>
 
                     <Link
-                        :href="user ? route('donation.create') : route('login')"
+                        v-if="$page.props.auth.user && $page.props.auth.user.vendor"
+                        :href="route('vendor.dashboard')"
                         class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
                     >
                         <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
                         <span>Dashboard Mitra</span>
+                    </Link>
+
+                    <Link
+                        v-if="$page.props.auth.user && $page.props.auth.user.vendor && $page.props.auth.user.vendor.status !== 'rejected'"
+                        :href="route('vendor.dashboard')"
+                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                    >
+                        <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
+                        <span>Dashboard Mitra</span>
+                    </Link>
+
+                    <Link
+                        v-else-if="$page.props.auth.user && (!$page.props.auth.user.vendor || $page.props.auth.user.vendor.status === 'rejected')"
+                        :href="route('vendor.register')"
+                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                    >
+                        <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
+                        <span>
+                            {{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Dashboard Mitra' }}
+                        </span>
                     </Link>
                 </div>
             </div>

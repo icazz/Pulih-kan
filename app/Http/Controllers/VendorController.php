@@ -12,46 +12,80 @@ class VendorController extends Controller
     // 1. Tampilkan Halaman Form
     public function create()
     {
-        // Cek: Kalau sudah jadi vendor, jangan boleh masuk sini lagi
-        if (Auth::user()->vendor) {
-            return redirect()->route('dashboard');
+        $vendor = auth()->user()->vendor;
+
+        // PERUBAHAN 1:
+        // Cek jika vendor sudah ada DAN statusnya BUKAN 'rejected'.
+        // Artinya: Kalau statusnya 'rejected', kode ini dilewati agar user bisa buka form lagi.
+        if ($vendor && $vendor->status !== 'rejected') {
+            return redirect()->route('vendor.dashboard');
         }
 
-        return Inertia::render('Vendor/Register');
+        // Kirim data lama (existingData) ke Vue agar form terisi otomatis saat daftar ulang
+        return Inertia::render('Vendor/Register', [
+            'existingData' => $vendor
+        ]);
     }
 
-    // 2. Proses Simpan Data
+    // 2. Proses Simpan / Update Data
     public function store(Request $request)
     {
-        $request->validate([
-            'shop_name' => 'required|string|max:255',
-            'service_type' => 'required|string', // Contoh: Servis AC, Kelistrikan
-            'description' => 'required|string',
-            'address' => 'required|string',
-            'latitude' => 'required',
-            'longitude' => 'required',
-            'ktp_photo' => 'required|image|max:2048', // Wajib upload KTP
+        // Validasi data
+        $validated = $request->validate([
+            'nama_mitra'   => 'required|string|max:255',
+            'no_telepon'   => 'required|string|max:20',
+            'email'        => 'required|email|max:255',
+            'jenis_jasa'   => 'required|array|min:1',
+            'jasa_lainnya' => 'nullable|string',
+            'provinsi'     => 'required|string',
+            'kota'         => 'required|string',
+            'alamat'       => 'required|string',
+            'latitude'     => 'required',
+            'longitude'    => 'required',
+            'agreement'    => 'accepted',
         ]);
 
-        // Upload KTP
-        $path = null;
-        if ($request->hasFile('ktp_photo')) {
-            $path = $request->file('ktp_photo')->store('ktp_vendors', 'public');
+        // PERUBAHAN 2:
+        // Hapus pengecekan "if (Auth::user()->vendor)" yang lama agar tidak error saat daftar ulang.
+        
+        // Gunakan updateOrCreate.
+        // Logic: Cari data berdasarkan user_id.
+        // Jika ketemu (misal data lama yang ditolak), UPDATE datanya.
+        // Jika tidak ketemu, CREATE baru.
+        Vendor::updateOrCreate(
+            ['user_id' => Auth::id()], // Kunci pencarian
+            array_merge($validated, [
+                'status' => 'pending',     // Reset status jadi pending lagi
+                'is_verified' => false     // Reset verifikasi jadi false
+            ])
+        );
+
+        return redirect()->route('welcome')->with('message', 'Pendaftaran berhasil dikirim! Mohon tunggu verifikasi admin.');
+    }
+
+    public function dashboard()
+    {
+        $vendor = auth()->user()->vendor;
+
+        // 1. Jika belum mendaftar, lempar ke form pendaftaran
+        if (!$vendor) {
+            return redirect()->route('vendor.register');
         }
 
-        // Simpan ke Database
-        Vendor::create([
-            'user_id' => Auth::id(),
-            'shop_name' => $request->shop_name,
-            'service_type' => $request->service_type,
-            'description' => $request->description,
-            'address' => $request->address,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'ktp_photo_path' => $path,
-            'is_verified' => false, // Default belum diverifikasi
-        ]);
+        // PERUBAHAN 3:
+        // Jika statusnya DITOLAK ('rejected'), jangan kasih masuk dashboard/waiting.
+        // Lempar balik ke form pendaftaran untuk perbaiki data.
+        if ($vendor->status === 'rejected') {
+            return redirect()->route('vendor.register');
+        }
 
-        return redirect()->route('dashboard')->with('message', 'Pendaftaran berhasil! Tunggu verifikasi admin.');
+        // 2. Jika status masih pending / belum diverifikasi
+        // (Support status 'pending' string atau boolean false lama)
+        if ($vendor->status === 'pending' || (!$vendor->status && !$vendor->is_verified)) {
+            return Inertia::render('Vendor/WaitingVerification');
+        }
+
+        // 3. Jika SUDAH diverifikasi
+        return Inertia::render('Vendor/Dashboard', ['vendor' => $vendor]);
     }
 }

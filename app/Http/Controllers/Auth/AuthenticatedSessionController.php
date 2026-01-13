@@ -33,13 +33,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // LOGIKA BARU: Cek Role User
-        if ($request->user()->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard'));
+        // Logika pengalihan otomatis berdasarkan role
+        if ($request->user()->is_admin) {
+            return redirect()->route('admin.dashboard');
         }
 
-        // Jika bukan admin, ke dashboard biasa
-        return redirect()->intended(route('welcome', absolute: false));
+        // User biasa tetap ke landing page atau dashboard user
+        return redirect()->intended(route('welcome'));
     }
 
     /**

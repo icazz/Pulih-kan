@@ -9,20 +9,22 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/', function () {
+    // HAPUS LOGIKA INI JIKA ADA:
+    // if (Auth::check() && Auth::user()->vendor && Auth::user()->vendor->is_verified) {
+    //     return redirect()->route('vendor.dashboard');
+    // }
+
+    // Biarkan Admin tetap redirect jika mau, atau hapus juga agar admin bisa lihat landing page
+    if (Auth::check() && Auth::user()->is_admin) {
+        return redirect()->route('admin.dashboard');
+    }
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
         'auth' => [
-            'user' => Auth::user(), // Perbaikan agar tidak error saat load Navbar
+            'user' => Auth::user(),
         ],
     ]);
 })->name('welcome');
@@ -33,6 +35,11 @@ Route::post('/vendor/register', [VendorController::class, 'store'])->name('vendo
 
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('/vendor/register', [VendorController::class, 'create'])->name('vendor.register');
+    Route::post('/vendor/register', [VendorController::class, 'store'])->name('vendor.store'); 
+    // Dashboard khusus Mitra (Vendor)
+    Route::get('/vendor/dashboard', [VendorController::class, 'dashboard'])->name('vendor.dashboard');
     
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -62,6 +69,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     // Mengarah ke AdminController@index (sesuai controller yang kita buat)
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
+    Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
 });
 
 require __DIR__.'/auth.php';
