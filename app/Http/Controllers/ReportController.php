@@ -21,35 +21,39 @@ class ReportController extends Controller
         ]);
     }
 
-    // --- 2. PROSES SIMPAN (Store) ---
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'location' => 'required|string',
-            'drive_link' => 'required|url',
+        // 1. Validasi: Gunakan nama variabel BAHASA INGGRIS (Sesuai Vue & Database)
+        $data = $request->validate([
+            'title' => 'required',
+            'location' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'drive_link' => 'nullable|url',
+            
+            // PERUBAHAN DISINI: Samakan dengan Vue form
+            'deskripsi' => 'required',        // Dulu: deskripsi
+            'house_size' => 'nullable',         // Dulu: luas_rumah
+            'damage_types' => 'nullable|array', // Dulu: kerusakan
         ]);
 
-        try {
-            Report::create([
-                'user_id' => Auth::id(),
-                'title' => $request->title,
-                'description' => $request->deskripsi ?? '-',
-                'location' => $request->location,
-                'status' => 'verification', 
-                'image_before' => $request->drive_link,
-                'video_url' => null,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-            ]);
+        // 2. Simpan ke Database
+        Report::create([
+            'user_id' => auth()->id(),
+            'title' => $data['title'],
+            'location' => $data['location'],
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'status' => 'verification',
+            'drive_link' => $data['drive_link'],
+            
+            // PERUBAHAN DISINI: Tidak perlu mapping ribet lagi karena namanya sudah sama
+            'description'  => $data['deskripsi'],  
+            'house_size'   => $data['house_size'],    
+            'damage_types' => $data['damage_types'],  
+        ]);
 
-            // REDIRECT KE /reports (INDEX) SESUAI REQUEST KAMU
-            return redirect()->route('reports.index')
-                             ->with('message', 'Laporan berhasil dikirim! Menunggu verifikasi.');
-
-        } catch (\Exception $e) {
-            return back()->withErrors(['drive_link' => 'Gagal menyimpan: ' . $e->getMessage()]);
-        }
+        return redirect()->route('reports.index');
     }
 
     // --- 3. HALAMAN INDEX (Daftar Laporan) ---

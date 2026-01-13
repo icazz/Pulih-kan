@@ -90,4 +90,14 @@ class AdminController extends Controller
         return to_route('admin.dashboard', [], 303)
                 ->with('message', 'Laporan berhasil diperbarui!');
     }
+
+    public function show($id)
+    {
+        $report = Report::findOrFail($id); 
+        
+        return inertia('Admin/ReportDetail', [
+            'report' => $report,
+            'auth' => auth()->user()
+        ]);
+    }
 }

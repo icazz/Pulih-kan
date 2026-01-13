@@ -46,7 +46,7 @@ const menuItems = [
                     <img
                         src="/images/logo-pulihkan.png"
                         alt="Logo Pulih.kan"
-                        class="h-14 w-auto object-contain"
+                        class="h-12 w-auto object-contain"
                     />
                 </a>
             </div>

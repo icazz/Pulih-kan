@@ -25,10 +25,10 @@ const form = useForm({
     kota: '', 
     alamat: '', 
     location: '', 
-    luas_rumah: '', 
+    house_size: '', 
     latitude: '', 
     longitude: '',
-    kerusakan: [], 
+    damage_types: [], 
     drive_link: '', 
     deskripsi: ''
 });
@@ -39,8 +39,8 @@ const opsiKerusakan = [
 ];
 
 const toggleKerusakan = (item) => {
-    if (form.kerusakan.includes(item)) form.kerusakan = form.kerusakan.filter(i => i !== item);
-    else form.kerusakan.push(item);
+    if (form.damage_types.includes(item)) form.damage_types = form.damage_types.filter(i => i !== item);
+    else form.damage_types.push(item);
 };
 
 const nextStep = () => {
@@ -62,19 +62,17 @@ const prevStep = () => {
 
 const submitForm = () => {
     // Validasi Step 2 sebelum submit
-    if (form.kerusakan.length === 0 || !form.deskripsi || !form.drive_link) {
-        alert("Mohon lengkapi kerusakan dan Link Google Drive."); return;
+    if (form.damage_types.length === 0 || !form.deskripsi || !form.drive_link) {
+        alert("Mohon lengkapi kerusakan, deskripsi, dan Link Google Drive."); return;
     }
 
     form.location = `${form.alamat}, ${form.kota}, ${form.provinsi}`;
 
     form.post(route('reports.store'), {
-        onSuccess: () => {
-            // Berhasil, Controller akan redirect ke reports.show
-        },
+        onSuccess: () => { },
         onError: (errors) => {
             console.error("Error submit:", errors);
-            alert("Gagal mengirim laporan. Pastikan link drive valid.");
+            alert("Gagal mengirim laporan. Cek kembali isian Anda.");
         }
     });
 };
@@ -178,7 +176,7 @@ const initMap = () => {
                         </select>
                     </div>
                     <div><input type="text" v-model="form.alamat" placeholder="Alamat Lengkap" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>
-                    <div><input type="number" v-model="form.luas_rumah" placeholder="Luas Rumah (m²)" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>
+                    <div><input type="number" v-model="form.house_size" placeholder="Luas Rumah (m²)" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>
                 </div>
                 <div class="mb-8">
                     <h3 class="text-[#4F3726] font-bold mb-3 flex items-center gap-2">Pilih Titik di Peta</h3>
@@ -194,9 +192,9 @@ const initMap = () => {
             <div v-show="currentStep === 2">
                 <h2 class="text-2xl font-bold text-black mb-6">Kondisi Kerusakan</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    <div v-for="(item, index) in opsiKerusakan" :key="index" @click="toggleKerusakan(item)" class="cursor-pointer rounded-xl p-4 flex items-center gap-3 border transition-all duration-200" :class="form.kerusakan.includes(item) ? 'bg-[#FFFBEE] border-[#973C00] shadow-md' : 'bg-[#FFFBEE] border-[#973C00] hover:shadow-sm'">
+                    <div v-for="(item, index) in opsiKerusakan" :key="index" @click="toggleKerusakan(item)" class="cursor-pointer rounded-xl p-4 flex items-center gap-3 border transition-all duration-200" :class="form.damage_types.includes(item) ? 'bg-[#FFFBEE] border-[#973C00] shadow-md' : 'bg-[#FFFBEE] border-[#973C00] hover:shadow-sm'">
                         <div class="w-5 h-5 rounded border border-[#973C00] flex items-center justify-center bg-white">
-                            <div v-if="form.kerusakan.includes(item)" class="w-3 h-3 bg-[#973C00] rounded-sm"></div>
+                            <div v-if="form.damage_types.includes(item)" class="w-3 h-3 bg-[#973C00] rounded-sm"></div>
                         </div>
                         <span class="text-[#4F3726] font-medium select-none">{{ item }}</span>
                     </div>

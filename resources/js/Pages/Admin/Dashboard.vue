@@ -1,6 +1,6 @@
 <script setup>
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3'; // Hapus useForm karena tidak dipakai lagi di dashboard
+import { ref, computed, watch, nextTick } from 'vue';
 
 // --- LEAFLET SETUP ---
 import "leaflet/dist/leaflet.css";
@@ -29,34 +29,29 @@ const props = defineProps({
 const searchQuery = ref('');
 const activeTab = ref('Laporan User'); 
 const tabs = ['Laporan User', 'Verifikasi Vendor'];
+
 // Report Tabs
 const reportTabs = ['Semua', 'Menunggu Verifikasi', 'Menunggu Pembayaran', 'Dalam Pengerjaan', 'Selesai', 'Dibatalkan'];
 const activeReportTab = ref('Semua');
+
 // Vendor Tabs
 const vendorTabs = ['Menunggu', 'Terverifikasi', 'Ditolak'];
 const activeVendorTab = ref('Menunggu');
 
-// Modals
-const showModal = ref(false);       // Modal Laporan
-const showVendorModal = ref(false); // Modal Vendor
-const selectedReport = ref(null);
+// --- STATE VENDOR (TETAP) ---
+const showVendorModal = ref(false); // Modal Vendor Tetap Ada
 const selectedVendor = ref(null);
 
-// Map Instance (Supaya bisa di-destroy/reset)
+// Map Instance (Reusable)
 let map = null;
-
-// Form khusus Action Laporan
-const form = useForm({ action: '', price: '', category: '' });
 
 // --- LOGIC MAPS (Reusable) ---
 const initMap = (elementId, lat, lng) => {
-    // Hapus map lama jika ada
     if (map) {
         map.remove();
         map = null;
     }
 
-    // Default ke Monas jika koordinat null/invalid
     const latitude = parseFloat(lat) || -6.175392;
     const longitude = parseFloat(lng) || 106.827153;
 
@@ -71,13 +66,12 @@ const initMap = (elementId, lat, lng) => {
         .openPopup();
 };
 
-// --- LOGIC VENDOR ---
+// --- LOGIC VENDOR (TIDAK DISENTUH) ---
 const openVendorDetail = (vendor) => {
     selectedVendor.value = vendor;
     showVendorModal.value = true;
 };
 
-// Watcher untuk Vendor Modal -> Init Map
 watch(showVendorModal, (val) => {
     if (val && selectedVendor.value) {
         nextTick(() => {
@@ -99,7 +93,7 @@ const verifyVendor = (vendorId, status) => {
     });
 };
 
-// --- LOGIC REPORT ---
+// --- LOGIC REPORT (Hanya Helper Status) ---
 const getStatusData = (status) => {
     const map = {
         'verification': { label: 'Perlu Verifikasi', class: 'bg-red-100 text-red-600 border-red-200', tab: 'Menunggu Verifikasi' },
@@ -109,35 +103,6 @@ const getStatusData = (status) => {
         'cancelled':    { label: 'Dibatalkan',          class: 'bg-gray-100 text-gray-600 border-gray-200',    tab: 'Dibatalkan' },
     };
     return map[status] || map['verification'];
-};
-
-const openDetail = (report) => {
-    selectedReport.value = report;
-    form.price = report.price ? report.price : '';
-    form.category = report.category && report.category !== '-' ? report.category : '';
-    showModal.value = true;
-};
-
-// Watcher untuk Report Modal -> Init Map
-watch(showModal, (val) => {
-    if (val && selectedReport.value) {
-        nextTick(() => {
-            // Asumsi report punya field latitude/longitude. Jika belum, pastikan di Model/Controller dikirim.
-            // Gunakan fallback jika null
-            initMap('reportMap', selectedReport.value.latitude, selectedReport.value.longitude);
-        });
-    }
-});
-
-const submitAction = (action) => {
-    if (!selectedReport.value) return;
-    if (!confirm('Apakah Anda yakin ingin memproses status ini?')) return;
-    
-    form.action = action;
-    form.patch(`/admin/reports/${selectedReport.value.id}/status`, {
-        onSuccess: () => { showModal.value = false; },
-        preserveScroll: true
-    });
 };
 
 // --- FILTERING ---
@@ -156,9 +121,7 @@ const filteredReports = computed(() => {
 const filteredVendors = computed(() => {
     let data = props.vendors || [];
     
-    // 1. Filter Berdasarkan Tab Status
     if (activeVendorTab.value === 'Menunggu') {
-        // Tampilkan yang statusnya 'pending' ATAU null (data lama) tapi belum verified
         data = data.filter(v => v.status === 'pending' || (!v.status && !v.is_verified)); 
     } else if (activeVendorTab.value === 'Terverifikasi') {
         data = data.filter(v => v.status === 'verified' || v.is_verified);
@@ -166,7 +129,6 @@ const filteredVendors = computed(() => {
         data = data.filter(v => v.status === 'rejected');
     }
 
-    // 2. Filter Search
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
         data = data.filter(v => v.nama_mitra.toLowerCase().includes(q) || v.email.toLowerCase().includes(q));
@@ -179,7 +141,6 @@ const getVendorStatusBadge = (vendor) => {
     if (vendor.status === 'rejected') return { label: 'Ditolak', class: 'bg-red-100 text-red-700' };
     return { label: 'Menunggu', class: 'bg-yellow-100 text-yellow-700' };
 };
-
 </script>
 
 <template>
@@ -225,7 +186,12 @@ const getVendorStatusBadge = (vendor) => {
             <div v-if="filteredReports.length === 0" class="text-center py-20 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">Tidak ada laporan ditemukan.</div>
             
             <div class="grid gap-4">
-                <div v-for="report in filteredReports" :key="report.id" @click="openDetail(report)" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow-md transition cursor-pointer group">
+                <Link 
+                    v-for="report in filteredReports" 
+                    :key="report.id" 
+                    :href="route('admin.reports.show', report.id)" 
+                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow-md hover:border-orange-300 transition cursor-pointer group"
+                >
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-[#BB4D00] group-hover:bg-[#BB4D00] group-hover:text-white transition shadow-inner">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
@@ -241,12 +207,11 @@ const getVendorStatusBadge = (vendor) => {
                         </span>
                         <span class="text-xs text-gray-400">{{ report.date }}</span>
                     </div>
-                </div>
+                </Link>
             </div>
         </div>
 
         <div v-if="activeTab === 'Verifikasi Vendor'" class="max-w-6xl mx-auto px-6 py-8">
-            
             <div class="flex gap-2 overflow-x-auto mb-6 pb-2">
                 <button v-for="tab in vendorTabs" :key="tab" @click="activeVendorTab = tab" 
                     class="px-4 py-2 text-sm font-semibold rounded-full border transition-all whitespace-nowrap"
@@ -364,98 +329,9 @@ const getVendorStatusBadge = (vendor) => {
             </div>
         </div>
 
-        <div v-if="showModal && selectedReport" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-                
-                <div class="w-full md:w-1/2 bg-gray-100 relative min-h-[300px] md:h-auto">
-                    <div id="reportMap" class="w-full h-full z-0"></div>
-                </div>
-
-                <div class="w-full md:w-1/2 flex flex-col bg-white h-full">
-                    <div class="bg-[#28160A] p-6 text-white flex justify-between items-start">
-                        <div>
-                            <h2 class="text-xl font-bold">Detail Pengajuan</h2>
-                            <p class="text-white/70 text-sm">REQ-{{ selectedReport.id }} • {{ selectedReport.user_name }}</p>
-                        </div>
-                        <button @click="showModal = false" class="text-white/70 hover:text-white text-2xl">&times;</button>
-                    </div>
-
-                    <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Judul Laporan</label>
-                                <p class="font-bold text-gray-800">{{ selectedReport.title }}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lokasi Kejadian</label>
-                                <p class="text-sm text-gray-800">{{ selectedReport.location }}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Deskripsi</label>
-                                <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{{ selectedReport.description }}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bukti Foto / Video</label>
-                                <a :href="selectedReport.drive_link" target="_blank" class="flex items-center gap-2 mt-1 text-blue-600 hover:underline font-medium p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                    Buka Link Google Drive
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-100 pt-4">
-                            <h3 class="font-bold text-[#BB4D00] text-sm mb-3 uppercase tracking-wide">Tindakan Admin</h3>
-                            
-                            <div v-if="selectedReport.status === 'verification'" class="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                                <div class="grid grid-cols-2 gap-3 mb-3">
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Kategori</label>
-                                        <select v-model="form.category" class="w-full text-sm rounded-lg border-gray-300 focus:ring-[#BB4D00]">
-                                            <option value="" disabled>Pilih...</option>
-                                            <option value="Ringan">Ringan</option>
-                                            <option value="Sedang">Sedang</option>
-                                            <option value="Berat">Berat</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Estimasi (Rp)</label>
-                                        <input v-model="form.price" type="number" class="w-full text-sm rounded-lg border-gray-300 focus:ring-[#BB4D00]">
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button @click="submitAction('verify')" :disabled="form.processing || !form.price || !form.category" class="flex-1 bg-[#BB4D00] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#973C00] transition disabled:opacity-50">
-                                        Kirim Penawaran
-                                    </button>
-                                    <button @click="submitAction('cancel')" class="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg font-bold text-sm hover:bg-red-50">Tolak</button>
-                                </div>
-                            </div>
-
-                            <div v-else-if="selectedReport.status === 'pending'" class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
-                                <p class="text-blue-800 font-bold mb-2">Tagihan: Rp {{ parseInt(form.price).toLocaleString('id-ID') }}</p>
-                                <button @click="submitAction('confirm_payment')" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition">
-                                    Konfirmasi Pembayaran Diterima
-                                </button>
-                            </div>
-
-                            <div v-else-if="selectedReport.status === 'process'" class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
-                                <button @click="submitAction('complete')" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition">
-                                    Tandai Pesanan Selesai
-                                </button>
-                            </div>
-
-                            <div v-else class="text-center p-3 bg-gray-50 rounded-xl text-gray-400 text-sm">
-                                Tidak ada tindakan diperlukan.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </template>
 
 <style scoped>
-/* Fix Leaflet Z-Index Issue if any */
 .leaflet-pane { z-index: 0; }
 </style>
