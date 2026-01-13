@@ -41,4 +41,10 @@ class Report extends Model
     {
         return $this->hasMany(ReportAttachment::class);
     }
+
+    public function vendor()
+    {
+        // Report milik satu Vendor (Belongs To)
+        return $this->belongsTo(Vendor::class);
+    }
 }

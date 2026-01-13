@@ -8,7 +8,7 @@
         
         <h1 class="text-3xl font-bold text-[#4F3726] mb-3">Verifikasi Sedang Berlangsung</h1>
         <p class="text-[#8C8070] max-w-md mb-10 leading-relaxed">
-            Halo <strong>{{ $page.props.auth?.user?.nama_mitra || 'Calon Mitra' }}</strong>, pendaftaran Anda telah kami terima. Admin akan memverifikasi data Anda dalam 3-5 hari kerja.
+            Halo <strong>{{ $page.props.auth?.user?.nama_mitra || 'Calon Mitra' }}</strong>, pendaftaran Anda telah kami terima. Admin akan memverifikasi data Anda dalam 1-3 hari kerja.
         </p>
         
         <Link :href="route('welcome')" class="px-8 py-3 bg-[#4F3726] text-white rounded-xl font-bold shadow-md hover:bg-[#3a281c] transition-all">

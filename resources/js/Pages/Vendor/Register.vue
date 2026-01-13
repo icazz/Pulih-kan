@@ -234,7 +234,7 @@ onMounted(() => {
 
                         <div class="text-center mb-10">
                             <p class="text-[#4F3726] text-xs italic opacity-80 leading-relaxed max-w-2xl mx-auto">
-                                *Proses verifikasi manual membutuhkan waktu 3-5 hari kerja. Mohon pantau email atau halaman ini secara berkala.
+                                *Proses verifikasi manual membutuhkan waktu 1-3 hari kerja. Mohon pantau email atau halaman ini secara berkala.
                             </p>
                         </div>
                     </div>

@@ -108,10 +108,11 @@ class ReportController extends Controller
         ]);
     }
 
-    // --- 5. HALAMAN PENAWARAN (Offer) ---
     public function offer($id)
     {
-        $report = Report::findOrFail($id);
+        // REVISI DISINI: Tambahkan with('vendor')
+        $report = Report::with('vendor')->findOrFail($id);
+        
         if ($report->user_id !== Auth::id()) abort(403);
 
         $formattedPrice = 'Rp ' . number_format($report->price ?? 0, 0, ',', '.');
@@ -119,7 +120,6 @@ class ReportController extends Controller
         return Inertia::render('Reports/Offer', [
             'report' => $report,
             'formattedPrice' => $formattedPrice,
-            // PENTING: Kirim Auth User disini juga
             'auth' => [
                 'user' => Auth::user(),
             ]
