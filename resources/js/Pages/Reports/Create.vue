@@ -35,7 +35,7 @@ const form = useForm({
 
 const opsiKerusakan = [
     'Saluran Air Rusak', 'Pembersihan Lumpur dan Puing', 'Instalasi Listrik Rusak',
-    'Atap Bocor / Rusak', 'Struktur Bangunan Rusak', 'Muncul Jamur dan Lembab'
+    'Atap Bocor / Rusak', 'Muncul Jamur dan Lembab', 'Lainnya'
 ];
 
 const toggleKerusakan = (item) => {
@@ -123,10 +123,10 @@ const initMap = () => {
         <div class="w-full bg-gradient-to-r from-[#28160A] via-[#000000] to-[#2D190D] pt-32 pb-16 shadow-lg">
             <div class="max-w-5xl mx-auto px-6">
                 <h1 class="text-3xl md:text-5xl font-bold text-[#FFEBDE] mb-3 leading-tight">
-                    Pengajuan <br class="md:hidden"> Pemulihan Rumah
+                    Pengajuan <br class="md:hidden"> Perbaikan Rumah
                 </h1>
                 <p class="text-white text-base md:text-lg opacity-90 font-light">
-                    Lengkapi data untuk mendapatkan bantuan pemulihan
+                    Lengkapi data untuk mendapatkan perbaikan
                 </p>
             </div>
         </div>
@@ -213,6 +213,7 @@ const initMap = () => {
                 <div class="mb-10">
                     <label class="block text-[#716363] text-lg mb-2 font-medium">Deskripsikan Kerusakan secara Detail</label>
                     <textarea v-model="form.deskripsi" rows="5" class="w-full bg-white border border-[#973C00] rounded-xl p-4 text-[#4F3726] focus:ring-2 focus:ring-[#973C00] shadow-sm" placeholder="Contoh: Tembok ruang tamu retak parah..."></textarea>
+                    <p class="text-sm text-gray-500 mt-2">*Hasil verifikasi akan diberikan maksimal dalam waktu 1 x 48 jam .</p>
                 </div>
 
                 <div class="flex justify-between items-center mt-12">

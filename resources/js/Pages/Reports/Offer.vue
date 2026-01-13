@@ -13,25 +13,41 @@ const layanan = "Renovasi Struktur, Kelistrikan & Sanitasi Total";
 </script>
 
 <template>
-    <Head title="Penawaran Pemulihan" />
-    <Navbar />
+    <Head title="Pengajuan Pemulihan Rumah" />
+        <Navbar /> 
 
-    <div class="min-h-screen bg-[#FFFFFA] font-['Montserrat'] pb-20 pt-32">
+    <div class="min-h-screen bg-[#FFFFFA] font-['Montserrat'] pb-20">
+        <div class="w-full bg-gradient-to-r from-[#28160A] via-[#000000] to-[#2D190D] pt-32 pb-16 shadow-lg">
+            <div class="max-w-5xl mx-auto px-6">
+                <h1 class="text-3xl md:text-5xl font-bold text-[#FFEBDE] mb-3 leading-tight">
+                    Pengajuan <br class="md:hidden"> Perbaikan Rumah
+                </h1>
+                <p class="text-white text-base md:text-lg opacity-90 font-light">
+                    Lengkapi data untuk mendapatkan perbaikan
+                </p>
+            </div>
+        </div>
         <div class="max-w-4xl mx-auto px-6">
-            
-            <h1 class="text-3xl md:text-4xl font-bold text-[#28160A] mb-2">
-                Penawaran Pemulihan
-            </h1>
-            <p class="text-gray-500 mb-8">
-                Berikut adalah hasil analisis dan penawaran dari vendor kami.
-            </p>
 
-            <div class="flex justify-center items-center gap-4 mb-10 opacity-60 grayscale">
-                <div class="w-10 h-10 bg-[#D6C5BA] rounded-full flex items-center justify-center"><img src="/images/step-1-home.png" class="w-5 brightness-0 invert"></div>
-                <div class="w-20 h-1 bg-[#D6C5BA]"></div>
-                <div class="w-10 h-10 bg-[#D6C5BA] rounded-full flex items-center justify-center"><img src="/images/step-2-alert.png" class="w-5 brightness-0 invert"></div>
-                <div class="w-20 h-1 bg-[#973C00]"></div>
-                <div class="w-10 h-10 bg-[#973C00] rounded-full flex items-center justify-center shadow-lg transform scale-110"><img src="/images/step-3-file.png" class="w-5 brightness-0 invert"></div>
+            <div class="max-w-5xl mx-auto mt-12 mb-16 px-6">
+                <div class="flex items-center justify-between relative w-full max-w-2xl mx-auto">
+                    <div class="absolute top-1/2 left-0 w-full h-[4px] bg-[#D6C5BA] z-0 transform -translate-y-1/2 rounded-full"></div>
+                    <div class="relative z-10 bg-[#FFFFFA] px-3">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shadow-sm bg-[#D6C5BA] border-[#D6C5BA]">
+                            <img src="/images/step-1-home.png" class="w-8 h-8 object-contain brightness-0 invert opacity-60">
+                        </div>
+                    </div>
+                    <div class="relative z-10 bg-[#FFFFFA] px-3">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shadow-sm bg-[#D6C5BA] border-[#D6C5BA]">
+                            <img src="/images/step-2-alert.png" class="w-8 h-8 object-contain brightness-0 invert opacity-60">
+                        </div>
+                    </div>
+                    <div class="relative z-10 bg-[#FFFFFA] px-3">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shadow-sm bg-[#973C00] border-[#973C00]">
+                            <img src="/images/step-3-file.png" class="w-8 h-8 object-contain brightness-0 invert opacity-100">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white border border-gray-300 rounded-2xl p-6 md:p-8 mb-6 shadow-sm">
