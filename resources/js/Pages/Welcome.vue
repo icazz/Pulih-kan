@@ -62,7 +62,7 @@ const user = computed(() => page.props.auth.user);
                 <p
                     class="text-lg font-medium text-[#FEF3C6] max-w-2xl mb-10 leading-relaxed drop-shadow-md"
                 >
-                    Temukan vendor profesional untuk restorasi kerusakan air,
+                    Temukan mitra profesional untuk restorasi kerusakan air,
                     rekonstruksi, dan pemulihan properti Anda dengan cepat dan
                     mudah.
                 </p>
@@ -81,7 +81,7 @@ const user = computed(() => page.props.auth.user);
                         class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
                     >
                         <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                        <span>Donasi, yuk!</span>
+                        <span>Dashboard Mitra</span>
                     </Link>
                 </div>
             </div>
@@ -106,10 +106,10 @@ const user = computed(() => page.props.auth.user);
                         />
                     </div>
                     <h3 class="text-xl font-semibold mb-2 tracking-wide">
-                        Vendor Terdaftar
+                        Mitra Terdaftar
                     </h3>
                     <p class="text-gray-300 text-sm font-light">
-                        500+ Vendor Berpengalaman
+                        200+ Mitra Berpengalaman
                     </p>
                 </div>
 
@@ -145,12 +145,12 @@ const user = computed(() => page.props.auth.user);
                 <h2
                     class="text-4xl md:text-5xl font-bold text-[#FFEADB] mb-4 drop-shadow-md"
                 >
-                    Layanan Vendor Kami
+                    Layanan Mitra Kami
                 </h2>
                 <p
                     class="text-[#FFFFFF] text-lg font-medium max-w-2xl mx-auto leading-relaxed"
                 >
-                    Temukan vendor profesional untuk setiap kebutuhan restorasi
+                    Temukan mitra profesional untuk setiap kebutuhan restorasi
                     kerusakan banjir Anda.
                 </p>
             </div>
@@ -172,8 +172,7 @@ const user = computed(() => page.props.auth.user);
                         Perbaikan Instalasi Air
                     </h3>
                     <p class="text-[#57534D] text-sm leading-relaxed">
-                        Perbaikan pipa, saluran air, dan sistem distribusi air
-                        bersih yang rusak.
+                        Perbaikan pipa, saluran air, dan sistem distribusi air bersih yang rusak agar aliran air kembali lancar dan higienis.
                     </p>
                 </div>
                 <div
@@ -192,8 +191,7 @@ const user = computed(() => page.props.auth.user);
                         Perbaikan Instalasi Listrik
                     </h3>
                     <p class="text-[#57534D] text-sm leading-relaxed">
-                        Pemeriksaan dan perbaikan sistem kelistrikan yang
-                        terdampak.
+                        Pemeriksaan dan perbaikan sistem kelistrikan yang terdampak untuk mencegah korsleting dan aman digunakan.
                     </p>
                 </div>
                 <div
@@ -209,11 +207,10 @@ const user = computed(() => page.props.auth.user);
                         />
                     </div>
                     <h3 class="text-[#1C1917] text-xl font-bold mb-3">
-                        Rekonstruksi
+                        Perbaikan Atap Bocor / Rusak
                     </h3>
                     <p class="text-[#57534D] text-sm leading-relaxed">
-                        Kontraktor terpercaya untuk perbaikan drywall, lantai,
-                        dan rekonstruksi.
+                        Mitra terpercaya untuk memperbaiki kerusakan struktural atap secara menyeluruh
                     </p>
                 </div>
                 <div
@@ -229,11 +226,10 @@ const user = computed(() => page.props.auth.user);
                         />
                     </div>
                     <h3 class="text-[#1C1917] text-xl font-bold mb-3">
-                        Pembersihan Lumpur
+                        Pembersihan Lumpur dan Puing
                     </h3>
                     <p class="text-[#57534D] text-sm leading-relaxed">
-                        Proses pengangkatan lumpur dan sisa material banjir agar
-                        area aman.
+                        Proses pengangkatan lumpur, sampah, dan sisa material banjir agar area kembali aman serta siap digunakan.
                     </p>
                 </div>
                 <div
@@ -249,11 +245,10 @@ const user = computed(() => page.props.auth.user);
                         />
                     </div>
                     <h3 class="text-[#1C1917] text-xl font-bold mb-3">
-                        Sanitasi Rumah
+                        Sanitasi dan Desinfeksi Rumah
                     </h3>
                     <p class="text-[#57534D] text-sm leading-relaxed">
-                        Tim pembersihan profesional untuk sanitasi dan
-                        deodorisasi.
+                        Pembersihan profesional untuk sanitasi dan deodorisasi menyeluruh properti.
                     </p>
                 </div>
             </div>
@@ -272,7 +267,7 @@ const user = computed(() => page.props.auth.user);
                     Cara Kerja Platform
                 </h2>
                 <p class="text-[#FAFFE6] text-lg font-medium max-w-2xl mx-auto">
-                    Tiga langkah mudah untuk menemukan vendor dan memulihkan
+                    Tiga langkah mudah untuk menemukan mitra dan memulihkan
                     properti Anda.
                 </p>
             </div>
@@ -332,7 +327,7 @@ const user = computed(() => page.props.auth.user);
                         <p
                             class="text-[#FFFFFF] text-base leading-relaxed opacity-90"
                         >
-                            Unggah foto/video kondisi rumah saat ini agar kami
+                            Unggah foto/video kondisi kerusakan rumah saat ini agar kami
                             dapat melakukan penilaian awal yang tepat.
                         </p>
                     </div>
@@ -381,7 +376,7 @@ const user = computed(() => page.props.auth.user);
                             />
                         </div>
                         <h3 class="text-[#1C1917] text-2xl font-bold mb-4">
-                            Vendor Siap Hadir
+                            Mitra Siap Hadir
                         </h3>
                         <p
                             class="text-[#57534D] text-base leading-relaxed font-medium"
@@ -404,11 +399,11 @@ const user = computed(() => page.props.auth.user);
                 <h2
                     class="text-4xl md:text-5xl font-bold text-[#E7E9E5] mb-4 drop-shadow-md"
                 >
-                    Bergabung Sebagai Mitra Vendor
+                    Bergabung Sebagai Mitra
                 </h2>
                 <p class="text-[#FFFFFF] text-lg font-medium max-w-2xl mx-auto">
                     Kembangkan bisnis restorasi Anda dengan bergabung dalam
-                    jaringan vendor terpercaya kami.
+                    jaringan mitra terpercaya kami.
                 </p>
             </div>
 
@@ -516,7 +511,7 @@ const user = computed(() => page.props.auth.user);
                     :href="user ? route('vendor.register') : route('login')"
                     class="px-8 py-4 rounded-lg bg-[#FFFFFF] text-[#7B3306] font-bold text-base shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 w-full sm:w-auto text-center"
                 >
-                    Daftar Sebagai Vendor
+                    Daftar Sebagai Mitra
                 </Link>
 
                 <Link
@@ -541,7 +536,7 @@ const user = computed(() => page.props.auth.user);
                     Apa Kata Klien Kami
                 </h2>
                 <p class="text-[#D6D3D1] text-lg font-medium max-w-2xl mx-auto">
-                    Dipercaya oleh ribuan pemilik rumah dan bisnis di saat
+                    Dipercaya oleh ratusan pemilik rumah dan bisnis di saat
                     mereka membutuhkan bantuan.
                 </p>
             </div>
