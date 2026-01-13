@@ -67,17 +67,6 @@ const menuItems = [
                 ref="dropdownRef"
             >
                 <template v-if="!user">
-                    <Link
-                        :href="route('login')"
-                        class="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#973C00] hover:bg-[#7a3000] text-white text-xs font-semibold transition-transform hover:scale-105 shadow-md border border-white/10"
-                    >
-                        <img
-                            src="/images/icon-relawan.png"
-                            alt="Icon"
-                            class="w-3.5 h-3.5 invert brightness-0 saturate-100"
-                        />
-                        <span>Daftar Relawan</span>
-                    </Link>
 
                     <Link
                         :href="route('login')"

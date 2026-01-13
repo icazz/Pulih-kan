@@ -1,15 +1,19 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import Navbar from '@/Components/Navbar.vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     report: Object,
     formattedPrice: String
 });
-
-// Data Dummy untuk simulasi respon admin
-const kategori = "Kerusakan Berat"; 
-const layanan = "Renovasi Struktur, Kelistrikan & Sanitasi Total";
+const layanan = computed(() => {
+    const cat = props.report.category;
+    if (cat === 'Ringan') return "Perbaikan Kosmetik, Pengecatan & Perbaikan Minor";
+    if (cat === 'Sedang') return "Perbaikan Struktural Ringan, Atap & Utilitas";
+    if (cat === 'Berat') return "Renovasi Struktur, Kelistrikan & Sanitasi Total";
+    return "Menunggu Assessment Lanjut";
+});
 </script>
 
 <template>
@@ -19,6 +23,10 @@ const layanan = "Renovasi Struktur, Kelistrikan & Sanitasi Total";
     <div class="min-h-screen bg-[#FFFFFA] font-['Montserrat'] pb-20">
         <div class="w-full bg-gradient-to-r from-[#28160A] via-[#000000] to-[#2D190D] pt-32 pb-16 shadow-lg">
             <div class="max-w-5xl mx-auto px-6">
+                <Link :href="route('reports.index')" class="inline-flex items-center text-white/90 hover:text-white mb-6 transition gap-2 group">
+                    <svg class="w-6 h-6 transform group-hover:-translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <span class="font-medium text-lg">Kembali</span>
+                </Link>
                 <h1 class="text-3xl md:text-5xl font-bold text-[#FFEBDE] mb-3 leading-tight">
                     Pengajuan <br class="md:hidden"> Perbaikan Rumah
                 </h1>
@@ -54,7 +62,7 @@ const layanan = "Renovasi Struktur, Kelistrikan & Sanitasi Total";
                 <h2 class="text-xl font-bold text-[#1C1917] mb-4">Kategori Kerusakan</h2>
                 <div class="inline-flex items-center gap-2 bg-[#FFE4E4] border border-[#FFCFCF] rounded-full px-6 py-2">
                     <div class="w-5 h-5 rounded-full border-2 border-[#D32F2F] flex items-center justify-center"><div class="w-3 h-0.5 bg-[#D32F2F]"></div></div>
-                    <span class="text-[#D32F2F] font-bold text-lg">{{ kategori }}</span>
+                    <span class="text-[#D32F2F] font-bold text-lg">Kerusakan {{ report.category }}</span>
                 </div>
             </div>
 

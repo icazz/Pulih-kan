@@ -113,8 +113,8 @@ const getStatusData = (status) => {
 
 const openDetail = (report) => {
     selectedReport.value = report;
-    form.price = report.price_raw || '';
-    form.category = report.category !== '-' ? report.category : '';
+    form.price = report.price ? report.price : '';
+    form.category = report.category && report.category !== '-' ? report.category : '';
     showModal.value = true;
 };
 
