@@ -25,8 +25,8 @@ class AppServiceProvider extends ServiceProvider
 
         // 2. Fix Mixed Content (TAMBAHAN BARU)
         // Jika aplikasi berjalan di Production (Railway), paksa gunakan HTTPS
-        if ($this->app->environment('production')) {
-            URL::forceScheme('https');
-        }
+        if($this->app->environment('production') || $this->app->environment('development')) {
+        URL::forceScheme('https');
+    }
     }
 }
