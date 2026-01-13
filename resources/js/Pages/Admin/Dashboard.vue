@@ -200,7 +200,7 @@ const getVendorStatusBadge = (vendor) => {
             </div>
         </div>
 
-        <div class="max-w-6xl mx-auto px-6 -mt-8 relative z-20">
+        <div class="max-w-6xl mx-auto px-6 mt-8 relative z-20">
             <input v-model="searchQuery" type="text" :placeholder="activeTab === 'Laporan User' ? 'Cari ID Laporan atau Nama Klien...' : 'Cari Nama Mitra...'" class="w-full py-4 px-6 rounded-xl shadow-xl border-none focus:ring-2 focus:ring-[#BB4D00] text-gray-700 bg-white">
         </div>
 
