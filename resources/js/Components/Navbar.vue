@@ -68,12 +68,12 @@ const menuItems = [
             >
                 <Link 
                     :href="route('vendor.list')" 
-                    class="hidden md:flex items-center gap-3 px-5 py-2 rounded-2xl bg-[#7C3507] hover:bg-[#96420a] text-white font-medium text-sm transition-all duration-300 shadow-md border border-white/10 group"
+                    class="hidden md:flex items-center gap-3 px-5 py-1.5 rounded-2xl bg-[#7C3507] hover:bg-[#96420a] text-white font-medium text-sm transition-all duration-300 shadow-md border border-white/10 group"
                 >
                     <img 
                         src="/images/icon-love.png" 
                         alt="Icon" 
-                        class="w-5 h-5 object-contain group-hover:scale-110 transition-transform" 
+                        class="w-4 h-5 object-contain group-hover:scale-110 transition-transform" 
                     />
                     
                     <span>Review</span>

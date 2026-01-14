@@ -174,4 +174,55 @@ class VendorController extends Controller
         ]);
     }
 
+    public function show($id)
+{
+    $vendor = Vendor::with(['reviews.user', 'reviews.report', 'reports'])
+        ->withCount(['reports as completed_projects' => function ($query) {
+            $query->where('status', 'completed');
+        }])
+        ->findOrFail($id);
+
+    // Hitung Rata-rata Rating
+    $avgRating = $vendor->reviews->avg('rating') ?? 0;
+    
+    // Hitung Distribusi Bintang (5, 4, 3, 2, 1)
+    $ratingDist = [
+        5 => $vendor->reviews->where('rating', 5)->count(),
+        4 => $vendor->reviews->where('rating', 4)->count(),
+        3 => $vendor->reviews->where('rating', 3)->count(),
+        2 => $vendor->reviews->where('rating', 2)->count(),
+        1 => $vendor->reviews->where('rating', 1)->count(),
+    ];
+
+    // Format Ulasan
+    $reviews = $vendor->reviews()->latest()->get()->map(function ($review) {
+        return [
+            'id' => $review->id,
+            'user_name' => $review->user->name,
+            'project_name' => $review->report ? $review->report->title : 'Proyek Umum',
+            'rating' => $review->rating,
+            'comment' => $review->comment,
+            'date' => $review->created_at->format('d F Y'),
+            'user_initial' => substr($review->user->name, 0, 1),
+        ];
+    });
+
+    return Inertia::render('Vendor/Show', [
+        'vendor' => [
+            'id' => $vendor->id,
+            'nama_mitra' => $vendor->nama_mitra,
+            'alamat' => $vendor->kota . ', ' . $vendor->provinsi, // Sesuaikan kolom alamat Anda
+            'no_telepon' => $vendor->no_telepon,
+            'email' => 'vendor@email.com', // Dummy jika tidak ada kolom email
+            'project_count' => $vendor->completed_projects,
+            'rating' => round($avgRating, 1),
+            'review_count' => $vendor->reviews->count(),
+            'initial' => substr($vendor->nama_mitra, 0, 1),
+        ],
+        'ratingDist' => $ratingDist,
+        'reviews' => $reviews,
+        'auth' => ['user' => Auth::user()]
+    ]);
+}
+
 }

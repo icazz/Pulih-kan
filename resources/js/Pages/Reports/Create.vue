@@ -162,18 +162,20 @@ const initMap = () => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
-                        <select v-model="form.provinsi" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm cursor-pointer">
-                            <option value="" disabled selected>Provinsi</option>
-                            <option value="Jawa Timur">Jawa Timur</option>
-                            <option value="Jawa Tengah">Jawa Tengah</option>
-                        </select>
+                        <input 
+                            type="text" 
+                            v-model="form.provinsi" 
+                            placeholder="Provinsi (Contoh: Jawa Timur)" 
+                            class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"
+                        >
                     </div>
                     <div>
-                        <select v-model="form.kota" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm cursor-pointer">
-                            <option value="" disabled selected>Kecamatan / Kota</option>
-                            <option value="Lamongan">Lamongan</option>
-                            <option value="Surabaya">Surabaya</option>
-                        </select>
+                        <input 
+                            type="text" 
+                            v-model="form.kota" 
+                            placeholder="Kecamatan / Kota" 
+                            class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"
+                        >
                     </div>
                     <div><input type="text" v-model="form.alamat" placeholder="Alamat Lengkap" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>
                     <div><input type="number" v-model="form.house_size" placeholder="Luas Rumah (m²)" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#973C00] shadow-sm"></div>

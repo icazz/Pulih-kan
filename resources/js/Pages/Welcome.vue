@@ -551,39 +551,25 @@ const user = computed(() => page.props.auth.user);
     >
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-20">
-                <h2
-                    class="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-md"
-                >
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-md">
                     Apa Kata Klien Kami
                 </h2>
                 <p class="text-[#D6D3D1] text-lg font-medium max-w-2xl mx-auto">
-                    Dipercaya oleh ratusan pemilik rumah dan bisnis di saat
-                    mereka membutuhkan bantuan.
+                    Dipercaya oleh ratusan pemilik rumah dan bisnis di saat mereka membutuhkan bantuan.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div
-                    class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300"
-                >
-                    <div
-                        class="flex gap-2 mb-6 h-48 overflow-hidden rounded-lg relative"
-                    >
-                        <div
-                            class="w-1/2 h-full bg-gray-600/50 flex items-center justify-center relative"
-                        >
-                            <span
-                                class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sebelum</span
-                            >
+                
+                <div class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300">
+                    <div class="flex gap-1 mb-6 h-48 overflow-hidden rounded-lg relative">
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/before-1.jpg" alt="Before" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sebelum</span>
                         </div>
-                        <div
-                            class="w-1/2 h-full bg-gray-500/50 flex items-center justify-center relative"
-                        >
-                            <span
-                                class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sesudah</span
-                            >
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/after-1.jpg" alt="After" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sesudah</span>
                         </div>
                     </div>
 
@@ -591,39 +577,25 @@ const user = computed(() => page.props.auth.user);
                         <span v-for="n in 5" :key="n" class="text-lg">★</span>
                     </div>
 
-                    <p
-                        class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic"
-                    >
-                        "Setelah rumah kami banjir, mereka datang dalam 2 jam.
-                        Profesional, efisien, dan sangat membantu. Mereka
-                        benar-benar menyelamatkan rumah kami."
+                    <p class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic min-h-[80px]">
+                        "Setelah rumah kami banjir, mereka datang dalam 2 jam. Profesional, efisien, dan sangat membantu. Mereka membersihkan hingga rumah kami kembali seperti sebelum banjir."
                     </p>
 
                     <div>
-                        <h4 class="text-[#F5F5F4] font-bold text-base">
-                            Sari Dewi
-                        </h4>
-                        <p class="text-[#A6A09B] text-xs">Jakarta Selatan</p>
+                        <h4 class="text-[#F5F5F4] font-bold text-base">Sari Dewi</h4>
+                        <p class="text-[#A6A09B] text-xs">Kalimantan Selatan</p>
                     </div>
                 </div>
 
-                <div
-                    class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300"
-                >
-                    <div
-                        class="flex gap-2 mb-6 h-48 overflow-hidden rounded-lg relative"
-                    >
-                        <div class="w-1/2 h-full bg-gray-600/50 relative">
-                            <span
-                                class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sebelum</span
-                            >
+                <div class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300">
+                    <div class="flex gap-1 mb-6 h-48 overflow-hidden rounded-lg relative">
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/before-2.jpg" alt="Before" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sebelum</span>
                         </div>
-                        <div class="w-1/2 h-full bg-gray-500/50 relative">
-                            <span
-                                class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sesudah</span
-                            >
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/after-2.png" alt="After" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sesudah</span>
                         </div>
                     </div>
 
@@ -631,39 +603,25 @@ const user = computed(() => page.props.auth.user);
                         <span v-for="n in 5" :key="n" class="text-lg">★</span>
                     </div>
 
-                    <p
-                        class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic"
-                    >
-                        "Layanan luar biasa dari awal hingga akhir. Mereka
-                        menangani semuanya termasuk klaim asuransi kami. Sangat
-                        direkomendasikan!"
+                    <p class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic min-h-[80px]">
+                        "Layanan luar biasa dari awal hingga akhir. Mereka memperbaiki kerusakan atap akibat angin dan hujan deras sehingga rumah kami aman ditempati."
                     </p>
 
                     <div>
-                        <h4 class="text-[#F5F5F4] font-bold text-base">
-                            Budi Santoso
-                        </h4>
+                        <h4 class="text-[#F5F5F4] font-bold text-base">Budi Santoso</h4>
                         <p class="text-[#A6A09B] text-xs">Tangerang</p>
                     </div>
                 </div>
 
-                <div
-                    class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300"
-                >
-                    <div
-                        class="flex gap-2 mb-6 h-48 overflow-hidden rounded-lg relative"
-                    >
-                        <div class="w-1/2 h-full bg-gray-600/50 relative">
-                            <span
-                                class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sebelum</span
-                            >
+                <div class="rounded-2xl p-6 bg-[#44403B]/30 border border-[#BB4D00]/50 backdrop-blur-sm hover:transform hover:-translate-y-1 transition-all duration-300">
+                    <div class="flex gap-1 mb-6 h-48 overflow-hidden rounded-lg relative">
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/before-3.png" alt="Before" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sebelum</span>
                         </div>
-                        <div class="w-1/2 h-full bg-gray-500/50 relative">
-                            <span
-                                class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded"
-                                >Sesudah</span
-                            >
+                        <div class="w-1/2 h-full relative group">
+                            <img src="/images/after-3.png" alt="After" class="w-full h-full object-cover brightness-75 group-hover:brightness-100 transition duration-500">
+                            <span class="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">Sesudah</span>
                         </div>
                     </div>
 
@@ -671,21 +629,16 @@ const user = computed(() => page.props.auth.user);
                         <span v-for="n in 5" :key="n" class="text-lg">★</span>
                     </div>
 
-                    <p
-                        class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic"
-                    >
-                        "Tim yang berpengetahuan dan bekerja cepat untuk
-                        mengeringkan properti kami. Komunikasi yang baik
-                        sepanjang proses."
+                    <p class="text-[#E7E5E4] text-sm leading-relaxed mb-6 italic min-h-[80px]">
+                        "Mitra vendor sangat paham bagaimana cara mengatasi saluran air yang kotor akibat terisi lumpur. Sekarang kami bisa mandi dan bersih-bersih dengan nyaman."
                     </p>
 
                     <div>
-                        <h4 class="text-[#F5F5F4] font-bold text-base">
-                            Linda Wijaya
-                        </h4>
+                        <h4 class="text-[#F5F5F4] font-bold text-base">Linda Wijaya</h4>
                         <p class="text-[#A6A09B] text-xs">Bekasi</p>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>

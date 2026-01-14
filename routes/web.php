@@ -22,7 +22,10 @@ Route::get('/', function () {
         ],
     ]);
 })->name('welcome');
-    Route::get('/mitra-vendor', [VendorController::class, 'list'])->name('vendor.list');
+// Halaman Daftar Mitra
+Route::get('/mitra-vendor', [VendorController::class, 'list'])->name('vendor.list');
+// Halaman Detail Vendor
+Route::get('/mitra-vendor/{id}', [VendorController::class, 'show'])->name('vendor.show');
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 

@@ -301,7 +301,7 @@ const submitReview = () => {
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                        <h3 class="font-bold text-[#4B741F] mb-4 flex items-center gap-2">Informasi Vendor</h3>
+                        <h3 class="font-bold text-[#4B741F] mb-4 flex items-center gap-2">Informasi Mitra</h3>
                         <div v-if="props.report.vendor" class="space-y-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xl shadow-inner">
