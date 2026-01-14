@@ -1,18 +1,27 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'; // Tambah useForm
+import { Head, Link, useForm, router } from '@inertiajs/vue3'; // Tambah useForm
 import Navbar from '@/Components/Navbar.vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     report: Object,
     formattedPrice: String,
-    recommendedVendors: Array // Data 5 Mitra Terdekat dari Controller
+    recommendedVendors: Array
 });
 
 // Form untuk User memilih mitra
 const form = useForm({
     vendor_id: ''
 });
+
+const viewProfile = () => {
+    if (!form.vendor_id) {
+        alert("Silakan klik salah satu mitra di bawah terlebih dahulu.");
+        return;
+    }
+    // Membuka profil mitra yang sedang dipilih (berdasarkan radio button)
+    window.open(route('vendor.show', form.vendor_id), '_blank');
+};
 
 // Function kirim pilihan ke backend
 const submitSelection = () => {
@@ -91,14 +100,22 @@ const layanan = computed(() => {
                     {{ layanan }}
                 </p>
 
-                <div class="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center text-gray-500 mb-4">
-                    <span>Cari tahu vendormu di sini : <span class="bg-yellow-400 text-white text-xs px-2 py-1 rounded">Lihat Vendor</span></span>
+                <div class="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center text-gray-500 mb-4 shadow-sm">
+                    <span class="text-sm">Cari tahu profil mitra di sini :</span>
+                    <button 
+                        type="button" 
+                        @click="viewProfile" 
+                        class="bg-yellow-400 hover:bg-yellow-500 text-white text-xs font-bold px-4 py-2 rounded transition shadow-sm"
+                    >
+                        Profil Mitra
+                    </button>
                 </div>
 
                 <div v-if="!report.vendor && recommendedVendors && recommendedVendors.length > 0" class="space-y-3">
                     <div v-for="vendor in recommendedVendors" :key="vendor.id" 
-                         class="relative flex items-center p-4 border rounded-xl cursor-pointer hover:bg-orange-50 transition"
-                         :class="form.vendor_id === vendor.id ? 'border-[#BB4D00] bg-orange-50 ring-1 ring-[#BB4D00]' : 'border-gray-200 bg-white'">
+                        @click="form.vendor_id = vendor.id" 
+                        class="relative flex items-center p-4 border rounded-xl cursor-pointer hover:bg-orange-50 transition"
+                        :class="form.vendor_id === vendor.id ? 'border-[#BB4D00] bg-orange-50 ring-1 ring-[#BB4D00]' : 'border-gray-200 bg-white'">
                         
                         <input type="radio" :name="'vendor'" :value="vendor.id" v-model="form.vendor_id" class="absolute right-4 text-[#BB4D00] focus:ring-[#BB4D00] h-5 w-5">
                         
@@ -143,13 +160,13 @@ const layanan = computed(() => {
                 <p class="text-4xl md:text-5xl font-bold text-[#BB4D00] mb-2">
                     {{ formattedPrice }}
                 </p>
-                <p class="text-gray-400 text-sm">*Estimasi berdasarkan assessment awal. Biaya final akan ditentukan setelah inspeksi vendor melalui kontrak.</p>
+                <p class="text-gray-400 text-sm">*Estimasi berdasarkan assessment awal. Biaya final akan ditentukan setelah inspeksi mitra melalui kontrak.</p>
             </div>
 
             <div class="bg-white border border-yellow-400 rounded-2xl p-6 md:p-8 mb-10 shadow-sm bg-yellow-50/10">
                 <h2 class="text-xl font-bold text-[#1C1917] mb-3">Langkah Selanjutnya</h2>
                 <p class="text-gray-600 leading-relaxed">
-                    Setelah Anda melanjutkan pengajuan, kami akan menghubungkan Anda dengan vendor terpercaya di wilayah Anda untuk inspeksi detail dan penawaran harga.
+                    Setelah Anda melanjutkan pengajuan, kami akan menghubungkan Anda dengan mitra terpercaya di wilayah Anda untuk inspeksi detail dan penawaran harga.
                 </p>
             </div>
 
