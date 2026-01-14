@@ -172,9 +172,17 @@ const filteredReports = computed(() => {
                         <Link :href="route('reports.show', report.id)" class="text-gray-400 hover:text-[#F54900] transition p-2 -mr-2 mb-4">
                             <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </Link>
-                        <div class="text-right mt-auto">
-                            <p class="text-xs text-[#787676] mb-1 font-medium">Total Biaya</p>
-                            <p class="text-xl md:text-2xl font-bold text-[#973C00]">{{ report.price }}</p>
+                        <div class="w-full md:w-auto flex flex-col justify-between items-end min-w-[160px] pl-4 border-l border-gray-50/0 md:border-gray-50">                            
+                            <div class="text-right mt-auto">
+                                <p class="text-[10px] font-bold uppercase tracking-widest" 
+                                :class="report.has_final_price ? 'text-[#09A600]' : 'text-[#787676]'">
+                                    {{ report.has_final_price ? 'Biaya Fix' : 'Estimasi Biaya' }}
+                                </p>
+
+                                <p class="text-xl md:text-2xl font-black text-[#973C00] mb-1">
+                                    {{ report.price }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

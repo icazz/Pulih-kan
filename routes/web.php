@@ -29,8 +29,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/vendor/register', [VendorController::class, 'create'])->name('vendor.register');
     Route::post('/vendor/register', [VendorController::class, 'store'])->name('vendor.store'); 
     // Dashboard khusus Mitra (Vendor)
-    Route::get('/vendor/dashboard', [VendorController::class, 'dashboard'])->name('vendor.dashboard');
-    
+    Route::prefix('vendor')->name('vendor.')->group(function () {
+        // Dashboard Vendor
+        Route::get('/dashboard', [VendorController::class, 'dashboard'])->name('dashboard');
+        
+        // Detail Laporan sisi Vendor (Untuk Input Harga Akhir)
+        // Nama rute ini harus: vendor.reports.show
+        Route::get('/reports/{id}', [VendorController::class, 'showReport'])->name('reports.show');
+        
+        // Aksi Batalkan Pesanan oleh Mitra (Hapus vendor_id)
+        Route::post('/reports/{id}/cancel-selection', [VendorController::class, 'cancelSelection'])->name('reports.cancelSelection');
+        
+        // Aksi Update Harga Akhir oleh Mitra
+        Route::patch('/reports/{id}', [VendorController::class, 'updateFinalPrice'])->name('reports.updateFinalPrice');
+        Route::patch('/reports/{id}/complete', [VendorController::class, 'completeProject'])->name('reports.complete');
+
+    });
+
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
@@ -49,6 +64,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Payment
+    Route::get('/reports/{id}/payment', [ReportController::class, 'payment'])->name('reports.payment');
+    Route::post('/reports/{id}/payment', [ReportController::class, 'storePayment'])->name('reports.storePayment');
 
     // Dummy
     Route::get('/tentang-kami', function () { return "Halaman Tentang Kami"; })->name('about.us');

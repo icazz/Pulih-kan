@@ -6,6 +6,7 @@ use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Models\Report;
 
 class VendorController extends Controller
 {
@@ -13,15 +14,10 @@ class VendorController extends Controller
     public function create()
     {
         $vendor = auth()->user()->vendor;
-
-        // PERUBAHAN 1:
-        // Cek jika vendor sudah ada DAN statusnya BUKAN 'rejected'.
-        // Artinya: Kalau statusnya 'rejected', kode ini dilewati agar user bisa buka form lagi.
         if ($vendor && $vendor->status !== 'rejected') {
             return redirect()->route('vendor.dashboard');
         }
 
-        // Kirim data lama (existingData) ke Vue agar form terisi otomatis saat daftar ulang
         return Inertia::render('Vendor/Register', [
             'existingData' => $vendor
         ]);
@@ -44,14 +40,6 @@ class VendorController extends Controller
             'longitude'    => 'required',
             'agreement'    => 'accepted',
         ]);
-
-        // PERUBAHAN 2:
-        // Hapus pengecekan "if (Auth::user()->vendor)" yang lama agar tidak error saat daftar ulang.
-        
-        // Gunakan updateOrCreate.
-        // Logic: Cari data berdasarkan user_id.
-        // Jika ketemu (misal data lama yang ditolak), UPDATE datanya.
-        // Jika tidak ketemu, CREATE baru.
         Vendor::updateOrCreate(
             ['user_id' => Auth::id()], // Kunci pencarian
             array_merge($validated, [
@@ -66,26 +54,73 @@ class VendorController extends Controller
     public function dashboard()
     {
         $vendor = auth()->user()->vendor;
+        // ... (logika proteksi/verifikasi sama seperti sebelumnya)
 
-        // 1. Jika belum mendaftar, lempar ke form pendaftaran
-        if (!$vendor) {
-            return redirect()->route('vendor.register');
-        }
+        $reports = Report::with('user')
+            ->where('vendor_id', $vendor->id)
+            ->whereIn('status', ['pending', 'process', 'completed', 'cancelled'])
+            ->latest()
+            ->get();
 
-        // PERUBAHAN 3:
-        // Jika statusnya DITOLAK ('rejected'), jangan kasih masuk dashboard/waiting.
-        // Lempar balik ke form pendaftaran untuk perbaiki data.
-        if ($vendor->status === 'rejected') {
-            return redirect()->route('vendor.register');
-        }
+        $transformedReports = $reports->map(function ($report) {
+            return [
+                'id' => $report->id,
+                'user_name' => $report->user->name ?? 'User',
+                'title' => $report->title,
+                'location' => $report->location,
+                'status' => $report->status,
+                'progress' => $report->progress ?? 0,
+                'price_estimasi' => $report->price,
+                'price_final' => $report->final_price,
+                'date' => $report->created_at->format('d M Y'),
+                'drive_link' => $report->drive_link, 
+            ];
+        });
 
-        // 2. Jika status masih pending / belum diverifikasi
-        // (Support status 'pending' string atau boolean false lama)
-        if ($vendor->status === 'pending' || (!$vendor->status && !$vendor->is_verified)) {
-            return Inertia::render('Vendor/WaitingVerification');
-        }
-
-        // 3. Jika SUDAH diverifikasi
-        return Inertia::render('Vendor/Dashboard', ['vendor' => $vendor]);
+        return Inertia::render('Vendor/Dashboard', [
+            'vendor' => $vendor,
+            'reports' => $transformedReports,
+            'auth' => ['user' => auth()->user()] // Wajib untuk Navbar
+        ]);
     }
+
+    public function showReport($id)
+    {
+        $vendor = auth()->user()->vendor;
+        $report = Report::with('user')->where('vendor_id', $vendor->id)->findOrFail($id);
+
+        return Inertia::render('Vendor/ReportDetail', [
+            'report' => $report,
+            'vendor' => $vendor,
+            'auth' => ['user' => auth()->user()] // Wajib untuk Navbar
+        ]);
+    }
+
+    public function updateFinalPrice(Request $request, $id)
+    {
+        $request->validate(['final_price' => 'required|numeric|min:0']);
+        $report = Report::findOrFail($id);
+        
+        $report->update([
+            'final_price' => $request->final_price,
+            // Optional: Anda bisa merubah status ke 'process' otomatis jika sudah ada kontrak
+        ]);
+
+        return back()->with('message', 'Harga akhir berhasil diperbarui.');
+    }
+
+    public function cancelSelection($id)
+    {
+        $vendor = auth()->user()->vendor;
+        $report = Report::where('vendor_id', $vendor->id)->findOrFail($id);
+
+        // Hapus vendor_id agar pesanan kembali 'bebas' untuk dipilih mitra lain
+        $report->update([
+            'vendor_id' => null,
+            // Status tetap 'pending' agar customer bisa pilih mitra lagi dari halaman Offer
+        ]);
+
+        return redirect()->route('vendor.dashboard')->with('message', 'Pesanan berhasil dikembalikan ke sistem.');
+    }
+
 }

@@ -59,24 +59,33 @@ class ReportController extends Controller
     // --- 3. HALAMAN INDEX (Daftar Laporan) ---
     public function index()
     {
+        // Mengambil laporan milik user yang sedang login
         $reports = Report::where('user_id', Auth::id())->latest()->get();
 
         $reports->transform(function ($report) {
+            // Cek apakah mitra sudah menginput harga final
+            $isFinal = !is_null($report->final_price);
+            
             return [
                 'id' => $report->id,
                 'title' => $report->title,
                 'location' => $report->location,
                 'date' => $report->created_at->format('d M Y'),
-                'drive_link' => $report->image_before, 
+                // Pastikan menggunakan kolom drive_link (bukan image_before)
+                'drive_link' => $report->drive_link, 
                 'status' => $report->status,
                 'progress' => $report->progress ?? 0,
-                'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi'
+                
+                // --- LOGIKA BIAYA ---
+                'has_final_price' => $isFinal, // Flag untuk mengecek "Biaya Fix" atau "Estimasi"
+                'price' => $isFinal 
+                    ? 'Rp ' . number_format($report->final_price, 0, ',', '.') 
+                    : ($report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi')
             ];
         });
 
         return Inertia::render('Reports/Index', [
             'reports' => $reports,
-            // PENTING: Kirim Auth User disini agar tidak blank setelah redirect
             'auth' => [
                 'user' => Auth::user(),
             ]
@@ -197,6 +206,25 @@ class ReportController extends Controller
         ]);
 
         return redirect()->route('reports.show', $id)->with('success', 'Mitra berhasil dipilih! Silakan lakukan pembayaran.');
+    }
+
+    public function payment($id)
+    {
+        $report = Report::with(['vendor', 'user'])->findOrFail($id);
+        
+        // Proteksi: Hanya pemilik laporan yang bisa akses
+        if ($report->user_id !== auth()->id()) abort(403);
+        
+        // Biaya admin (contoh statis seperti di lampiran)
+        $admin_fee = 5000;
+        $total_payment = $report->final_price + $admin_fee;
+
+        return Inertia::render('Reports/Payment', [
+            'report' => $report,
+            'admin_fee' => $admin_fee,
+            'total_payment' => $total_payment,
+            'auth' => ['user' => auth()->user()]
+        ]);
     }
 
     // --- 6. ACTION LAINNYA ---
