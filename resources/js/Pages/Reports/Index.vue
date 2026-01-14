@@ -4,7 +4,6 @@ import { ref, computed } from 'vue';
 import Navbar from '@/Components/Navbar.vue';
 
 const { props } = usePage();
-// Menggunakan props dari usePage agar sinkron dengan data auth yang dikirim Controller
 const user = props.auth.user; 
 
 const propsData = defineProps({
@@ -15,27 +14,51 @@ const propsData = defineProps({
 const searchQuery = ref('');
 const activeTab = ref('Semua');
 
-// --- UPDATE DI SINI: MENAMBAHKAN "Dibatalkan" ---
 const tabs = [
     'Semua', 
     'Menunggu Verifikasi', 
     'Menunggu Pembayaran', 
     'Dalam Pengerjaan', 
     'Selesai', 
-    'Dibatalkan' // <--- Tab Baru
+    'Dibatalkan' 
 ];
 
-// --- LOGIC STATUS BADGE ---
+// --- LOGIC STATUS BADGE (Diupdate dengan status baru) ---
 const getStatusBadge = (status) => {
     const map = {
-        'verification': { label: 'Menunggu Verifikasi', class: 'bg-gray-500' }, 
-        'pending':      { label: 'Menunggu Pembayaran', class: 'bg-[#CA8E31]' },
-        'process':      { label: 'Dalam Pengerjaan',    class: 'bg-[#4688FB]' },
-        'completed':    { label: 'Selesai',             class: 'bg-[#09A600]' },
-        'cancelled':    { label: 'Dibatalkan',          class: 'bg-red-500' }, // Warna Merah untuk Batal
+        'verification':         { label: 'Menunggu Verifikasi', class: 'bg-gray-500' }, 
+        'pending':              { label: 'Menunggu Pembayaran', class: 'bg-[#CA8E31]' },
+        'payment_verification': { label: 'Menunggu Konfirmasi', class: 'bg-blue-500' }, // <--- TAMBAHAN
+        'process':              { label: 'Dalam Pengerjaan',    class: 'bg-[#4688FB]' },
+        'completed':            { label: 'Selesai',             class: 'bg-[#09A600]' },
+        'cancelled':            { label: 'Dibatalkan',          class: 'bg-red-500' },
     };
-    // Default fallback
     return map[status] || map['verification'];
+};
+
+// --- LOGIC PROGRESS BAR (SESUAI REQUEST ANDA) ---
+const getVisualProgress = (report) => {
+    const status = report.status;
+    const dbProgress = report.progress || 0;
+
+    switch (status) {
+        case 'verification': 
+            return 25;
+        case 'pending': 
+            return 50;
+        case 'payment_verification': 
+            return 60; // Sedikit lebih maju dari pending
+        case 'process': 
+            // Jika di DB progressnya 0, kita tampilkan 80% sesuai request.
+            // Tapi jika vendor sudah update (misal 90%), kita pakai data asli biar akurat.
+            return dbProgress > 0 ? dbProgress : 80; 
+        case 'completed': 
+            return 100;
+        case 'cancelled': 
+            return 0;
+        default: 
+            return 0;
+    }
 };
 
 // Filter Laporan
@@ -44,7 +67,12 @@ const filteredReports = computed(() => {
     
     // Filter by Tab
     if (activeTab.value !== 'Semua') {
-        data = data.filter(r => getStatusBadge(r.status).label === activeTab.value);
+        // Khusus tab "Menunggu Pembayaran", kita gabung status pending & payment_verification
+        if (activeTab.value === 'Menunggu Pembayaran') {
+            data = data.filter(r => r.status === 'pending' || r.status === 'payment_verification');
+        } else {
+            data = data.filter(r => getStatusBadge(r.status).label === activeTab.value);
+        }
     }
 
     // Filter by Search
@@ -157,13 +185,14 @@ const filteredReports = computed(() => {
                                 <span class="text-gray-500 text-sm md:text-base">{{ report.date }}</span>
                             </div>
                         </div>
+
                         <div class="mt-auto">
                             <div class="flex justify-between text-xs text-[#787676] mb-1.5">
                                 <span>Progress Pekerjaan</span>
-                                <span class="text-[#F54900] font-bold">{{ report.progress }}%</span>
+                                <span class="text-[#F54900] font-bold">{{ getVisualProgress(report) }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-[#F54900] h-full rounded-full transition-all duration-500" :style="{ width: report.progress + '%' }"></div>
+                                <div class="bg-[#F54900] h-full rounded-full transition-all duration-500" :style="{ width: getVisualProgress(report) + '%' }"></div>
                             </div>
                         </div>
                     </div>

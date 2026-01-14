@@ -98,15 +98,19 @@ class VendorController extends Controller
 
     public function updateFinalPrice(Request $request, $id)
     {
+        // Validasi
         $request->validate(['final_price' => 'required|numeric|min:0']);
+        
+        // Cari Report
         $report = Report::findOrFail($id);
         
+        // Update Harga & Status
         $report->update([
             'final_price' => $request->final_price,
-            // Optional: Anda bisa merubah status ke 'process' otomatis jika sudah ada kontrak
+            'status'      => 'pending' // Ubah status agar User bisa melihat tombol "Bayar Sekarang"
         ]);
 
-        return back()->with('message', 'Harga akhir berhasil diperbarui.');
+        return back()->with('message', 'Harga akhir berhasil diperbarui. Menunggu pembayaran user.');
     }
 
     public function cancelSelection($id)
@@ -121,6 +125,53 @@ class VendorController extends Controller
         ]);
 
         return redirect()->route('vendor.dashboard')->with('message', 'Pesanan berhasil dikembalikan ke sistem.');
+    }
+
+    public function list()
+    {
+        // Tambahkan 'reports' di dalam with() agar datanya terambil
+        $vendors = Vendor::where('status', 'verified')
+            ->with(['reviews.report', 'reviews.user', 'reports']) // <--- TAMBAHKAN 'reports'
+            ->get()
+            ->map(function ($vendor) {
+                $avgRating = $vendor->reviews->avg('rating');
+                $reviewCount = $vendor->reviews->count();
+                
+                // LOGIKA HITUNG PROJECT SELESAI
+                // Ambil report milik vendor ini, filter yang statusnya 'completed', lalu hitung
+                $completedProjects = $vendor->reports->where('status', 'completed')->count();
+
+                return [
+                    'id' => $vendor->id,
+                    'nama_mitra' => $vendor->nama_mitra,
+                    'jenis_jasa' => $vendor->jenis_jasa,
+                    'alamat' => $vendor->kota . ', ' . $vendor->provinsi,
+                    'no_telepon' => $vendor->no_telepon,
+                    'rating' => $avgRating ? round($avgRating, 1) : 0,
+                    'review_count' => $reviewCount,
+                    'initial' => substr($vendor->nama_mitra, 0, 1),
+                    
+                    // KIRIM DATA PROJECT SELESAI KE VUE
+                    'project_count' => $completedProjects, 
+
+                    // Data Ulasan (biarkan seperti sebelumnya)
+                    'reviews_list' => $vendor->reviews->map(function($review) {
+                        return [
+                            'id' => $review->id,
+                            'rating' => $review->rating,
+                            'comment' => $review->comment,
+                            'reviewer_name' => $review->user->name,
+                            'project_name' => $review->report ? $review->report->title : 'Proyek',
+                            'date' => $review->created_at->format('d M Y'),
+                        ];
+                    }),
+                ];
+            });
+
+        return Inertia::render('Vendor/List', [
+            'vendors' => $vendors,
+            'auth' => ['user' => Auth::user()]
+        ]);
     }
 
 }

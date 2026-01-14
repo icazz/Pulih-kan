@@ -28,7 +28,7 @@ const logout = () => {
 const menuItems = [
     { text: "Layanan", href: "/#layanan" },
     { text: "Proses", href: "/#proses" },
-    { text: "Mitra Vendor", href: "/#mitra" },
+    { text: "Mitra", href: "/#mitra" },
     { text: "Testimoni", href: "/#testimoni" },
     { text: "Kontak", href: "/#kontak" },
 ];
@@ -66,8 +66,19 @@ const menuItems = [
                 class="flex items-center space-x-3 ml-20 relative"
                 ref="dropdownRef"
             >
+                <Link 
+                    :href="route('vendor.list')" 
+                    class="hidden md:flex items-center gap-3 px-5 py-2 rounded-2xl bg-[#7C3507] hover:bg-[#96420a] text-white font-medium text-sm transition-all duration-300 shadow-md border border-white/10 group"
+                >
+                    <img 
+                        src="/images/icon-love.png" 
+                        alt="Icon" 
+                        class="w-5 h-5 object-contain group-hover:scale-110 transition-transform" 
+                    />
+                    
+                    <span>Review</span>
+                </Link>
                 <template v-if="!user">
-
                     <Link
                         :href="route('login')"
                         class="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#1F1F1F] hover:bg-black text-white text-xs font-semibold transition-transform hover:scale-105 shadow-md border border-white/10"

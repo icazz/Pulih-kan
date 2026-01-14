@@ -20,6 +20,31 @@ const getFilterLabel = (f) => {
     return f;
 };
 
+// --- LOGIC PROGRESS BAR (SAMA DENGAN USER) ---
+const getVisualProgress = (report) => {
+    const status = report.status;
+    const dbProgress = report.progress || 0;
+
+    switch (status) {
+        case 'verification': 
+            return 25;
+        case 'pending': 
+            return 50;
+        case 'payment_verification': 
+            return 60; // User sudah bayar, menunggu konfirmasi
+        case 'process': 
+            // Jika DB 0 tapi status process, tampilkan 80%.
+            // Jika vendor sudah update (misal 90%), pakai data asli.
+            return dbProgress > 0 ? dbProgress : 80; 
+        case 'completed': 
+            return 100;
+        case 'cancelled': 
+            return 0;
+        default: 
+            return 0;
+    }
+};
+
 const filteredReports = computed(() => {
     if (activeFilter.value === "Semua") return props.reports;
     return props.reports.filter((r) => r.status === activeFilter.value);
@@ -109,10 +134,10 @@ const openDrive = (url) => {
                             <div class="mt-6">
                                 <div class="flex justify-between text-xs mb-1.5">
                                     <span class="text-gray-400 font-medium">Progress Pekerjaan</span>
-                                    <span class="font-bold text-[#BB4D00]">{{ report.progress }}%</span>
+                                    <span class="font-bold text-[#BB4D00]">{{ getVisualProgress(report) }}%</span>
                                 </div>
                                 <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-[#BB4D00] h-full transition-all duration-700" :style="{ width: report.progress + '%' }"></div>
+                                    <div class="bg-[#BB4D00] h-full transition-all duration-700" :style="{ width: getVisualProgress(report) + '%' }"></div>
                                 </div>
                             </div>
                         </div>

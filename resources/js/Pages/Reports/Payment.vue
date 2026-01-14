@@ -9,7 +9,6 @@ const props = defineProps({
     auth: Object,
 });
 
-// 1. Tambahkan Data Dummy Nomor Rekening per Metode
 const selectedMethod = ref("Mandiri");
 const paymentMethods = [
     { name: "BCA", icon: "/images/bca.png", type: "Bank", accountNumber: "8830123456", accountName: "PT Pulihkan Indonesia Jaya" },
@@ -20,29 +19,33 @@ const paymentMethods = [
     { name: "DANA", icon: "/images/dana.png", type: "E-Wallet", accountNumber: "081234567890", accountName: "PULIHKAN - DANA" },
 ];
 
-// 2. Logika untuk mengambil detail metode yang aktif
 const activeMethodDetails = computed(() => {
     return paymentMethods.find(m => m.name === selectedMethod.value);
 });
 
+// FORM UNTUK LINK (STRING)
 const form = useForm({
-    proof: null,
-    contract: null,
-    method: selectedMethod.value,
+    proof: '',      // String kosong (untuk link)
+    contract: '',   // String kosong (untuk link)
+    payment_type: selectedMethod.value,
 });
 
-const handleUploadProof = (e) => {
-    form.proof = e.target.files[0];
-};
-
-const handleUploadContract = (e) => {
-    form.contract = e.target.files[0];
-};
+// HAPUS FUNGSI handleUpload... KARENA KITA PAKAI V-MODEL LANGSUNG
 
 const submitPayment = () => {
-    if (!form.contract) return alert("Harap upload Kontrak Kerja.");
-    if (!form.proof) return alert("Harap upload Bukti Transfer.");
-    form.post(route("reports.storePayment", props.report.id));
+    // Validasi Sederhana
+    if (!form.contract) return alert("Harap isi Link Google Drive (Kontrak).");
+    if (!form.proof) return alert("Harap isi Link Bukti Transfer.");
+    
+    // POST DATA (Tanpa forceFormData karena ini JSON biasa)
+    form.post(route("reports.storePayment", props.report.id), {
+        onSuccess: () => {
+            console.log("Berhasil!");
+        },
+        onError: (err) => {
+            console.error("Gagal mengirim:", err);
+        }
+    });
 };
 
 const formatCurrency = (value) => {
@@ -87,7 +90,7 @@ const copyToClipboard = (text) => {
                         <h3 class="font-bold text-lg mb-6">Pilih Metode Pembayaran</h3>
                         <div class="grid grid-cols-3 gap-4 mb-8">
                             <button v-for="method in paymentMethods" :key="method.name"
-                                @click="selectedMethod = method.name; form.method = method.name"
+                                @click="selectedMethod = method.name; form.payment_type = method.name"
                                 :class="selectedMethod === method.name ? 'border-[#BB4D00] bg-orange-50 ring-1 ring-[#BB4D00]' : 'border-gray-200'"
                                 class="p-4 border rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition">
                                 <span class="font-bold text-gray-500 text-xs">{{ method.name }}</span>
@@ -147,23 +150,30 @@ const copyToClipboard = (text) => {
 
                     <div class="space-y-3">
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                            <h3 class="font-bold text-xs mb-2">Upload Kontrak</h3>
-                            <label class="border-2 border-dashed border-gray-200 rounded-xl p-3 block cursor-pointer hover:bg-gray-50 transition">
-                                <input type="file" @change="handleUploadContract" class="hidden" />
-                                <span class="text-[10px] text-gray-400 font-medium">{{ form.contract ? form.contract.name : 'Klik untuk upload' }}</span>
-                            </label>
+                            <h3 class="font-bold text-xs mb-1">Link Google Drive (Kontrak)</h3>
+                            <p class="text-[9px] text-gray-400 mb-2 italic">Pastikan link folder sudah di-set "Anyone with the link"</p>
+                            
+                            <input type="url" v-model="form.contract" 
+                                placeholder="https://drive.google.com/..."
+                                class="w-full text-xs border-gray-200 rounded-lg p-2 focus:ring-[#BB4D00] focus:border-[#BB4D00]"
+                            />
+                            <p v-if="form.errors.contract" class="text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.contract }}</p>
                         </div>
+
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                            <h3 class="font-bold text-xs mb-2">Upload Bukti Bayar</h3>
-                            <label class="border-2 border-dashed border-gray-200 rounded-xl p-3 block cursor-pointer hover:bg-gray-50 transition">
-                                <input type="file" @change="handleUploadProof" class="hidden" />
-                                <span class="text-[10px] text-gray-400 font-medium">{{ form.proof ? form.proof.name : 'Klik untuk upload' }}</span>
-                            </label>
+                            <h3 class="font-bold text-xs mb-1">Link Bukti Transfer</h3>
+                            <p class="text-[9px] text-gray-400 mb-2 italic">Link gambar/PDF bukti pembayaran</p>
+                            
+                            <input type="url" v-model="form.proof" 
+                                placeholder="https://drive.google.com/..."
+                                class="w-full text-xs border-gray-200 rounded-lg p-2 focus:ring-[#BB4D00] focus:border-[#BB4D00]"
+                            />
+                            <p v-if="form.errors.proof" class="text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.proof }}</p>
                         </div>
+
                         <button @click="submitPayment" :disabled="form.processing"
-                            :class="form.proof && form.contract ? 'bg-[#BB4D00]' : 'bg-gray-300'"
-                            class="w-full py-3 text-white font-bold rounded-xl shadow-md transition uppercase text-[10px] tracking-widest">
-                            Kirim & Bayar
+                            class="w-full py-3 bg-[#BB4D00] text-white font-bold rounded-xl shadow-md transition uppercase text-[10px] tracking-widest hover:bg-[#a04100]">
+                            {{ form.processing ? 'Mengirim...' : 'Kirim Link & Bayar' }}
                         </button>
                     </div>
                 </div>

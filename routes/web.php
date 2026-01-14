@@ -22,7 +22,7 @@ Route::get('/', function () {
         ],
     ]);
 })->name('welcome');
-
+    Route::get('/mitra-vendor', [VendorController::class, 'list'])->name('vendor.list');
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -68,6 +68,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Payment
     Route::get('/reports/{id}/payment', [ReportController::class, 'payment'])->name('reports.payment');
     Route::post('/reports/{id}/payment', [ReportController::class, 'storePayment'])->name('reports.storePayment');
+    Route::patch('/reports/{id}/complete', [ReportController::class, 'complete'])->name('reports.complete');
+    Route::post('/reports/{id}/review', [ReportController::class, 'storeReview'])->name('reports.review');
 
     // Dummy
     Route::get('/tentang-kami', function () { return "Halaman Tentang Kami"; })->name('about.us');

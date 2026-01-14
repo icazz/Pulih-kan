@@ -28,6 +28,8 @@ class Report extends Model
         'vendor_id',
         'final_price',   // <--- BARU
         'contract_file', // <--- BARU
+        'payment_method', // <--- TAMBAHKAN INI
+        'payment_proof',
     ];
 
     // PENTING: Casting agar 'damage_types' otomatis jadi Array saat diambil
@@ -49,5 +51,11 @@ class Report extends Model
     {
         // Report milik satu Vendor (Belongs To)
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function review()
+    {
+        // Satu laporan memiliki satu review
+        return $this->hasOne(Review::class);
     }
 }

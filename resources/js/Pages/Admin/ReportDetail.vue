@@ -133,6 +133,34 @@ const submitAction = (action) => {
                     </div>
 
                     <div>
+                        <a v-if="report.contract_file" :href="report.contract_file" target="_blank" class="block w-full p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition cursor-pointer group relative z-20">
+                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1 cursor-pointer group-hover:text-blue-500">Kontrak Kerja</label>
+                            <div class="font-bold text-blue-700 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                Buka Link Drive
+                            </div>
+                        </a>
+                        <div v-else class="block w-full p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed opacity-70">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Kontrak Kerja</label>
+                            <div class="font-bold text-gray-400 flex items-center gap-2">Belum diisi user</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <a v-if="report.payment_proof" :href="report.payment_proof" target="_blank" class="block w-full p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition cursor-pointer group relative z-20">
+                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1 cursor-pointer group-hover:text-blue-500">Bukti Pembayaran</label>
+                            <div class="font-bold text-blue-700 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                Buka Link Drive
+                            </div>
+                        </a>
+                        <div v-else class="block w-full p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed opacity-70">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Bukti Pembayaran</label>
+                            <div class="font-bold text-gray-400 flex items-center gap-2">Belum diisi user</div>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Checklist Kerusakan</label>
                         <div class="flex flex-wrap gap-2">
                             <span v-for="(dmg, i) in report.damage_types" :key="i" class="px-3 py-1 rounded-full bg-red-50 text-red-700 text-sm font-medium border border-red-100">
@@ -209,12 +237,11 @@ const submitAction = (action) => {
                     </div>
 
                     <div v-else-if="report.status === 'pending'" class="bg-blue-50 p-6 rounded-2xl border border-blue-200 text-center">
-                        <h4 class="text-blue-900 font-bold mb-1">Menunggu Pilihan Mitra & Pembayaran User</h4>
-                        <p class="text-sm text-blue-600 mb-4">User sedang memilih mitra dan melakukan pembayaran.</p>
+                        <p class="text-sm text-blue-600 mb-4">Cek Bukti Bayar dan Kontrak Kerja harus sesuai dengan Harga Fix.</p>
                         <p class="text-2xl font-black text-blue-600 mb-6">Rp {{ parseInt(form.price).toLocaleString('id-ID') }}</p>
                         
                         <button @click="submitAction('confirm_payment')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-blue-200">
-                            Konfirmasi Pembayaran Diterima (Manual)
+                            Konfirmasi Pembayaran Diterima
                         </button>
                     </div>
 

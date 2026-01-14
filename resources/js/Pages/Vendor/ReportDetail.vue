@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import Navbar from "@/Components/Navbar.vue";
 import { computed } from "vue";
 
@@ -14,7 +14,12 @@ const form = useForm({
 
 const updatePrice = () => {
     form.patch(route('vendor.reports.updateFinalPrice', props.report.id), {
-        onSuccess: () => alert("Harga akhir berhasil disimpan!"),
+        preserveScroll: true, // Agar halaman tidak loncat ke atas
+        onSuccess: () => {
+            // HAPUS alert() agar tidak mengganggu flow
+            // Paksa ambil data terbaru dari server (Partial Reload)
+            router.reload({ only: ['report'] }); 
+        },
         onError: (errors) => console.log(errors) 
     });
 };
@@ -77,15 +82,6 @@ const openDrive = (url) => {
 
         <div class="max-w-6xl mx-auto px-6 mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-500 font-medium text-sm">Progress Keseluruhan</span>
-                        <span class="font-bold text-[#BB4D00]">{{ report.progress }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
-                        <div class="bg-[#BB4D00] h-full transition-all duration-700" :style="{width: report.progress + '%'}"></div>
-                    </div>
-                </div>
 
                 <div class="space-y-6">
                     <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -158,28 +154,50 @@ const openDrive = (url) => {
                         <span class="text-orange-500 font-bold">$</span> Informasi Pembayaran
                     </h3>
                     <div class="space-y-4">
-                        <div v-if="!report.final_price">
+                        
+                        <div v-if="!report.final_price || report.final_price == 0">
                             <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Input Total Biaya Fix</p>
                             <div class="flex gap-2 mt-2">
-                                <input v-model="form.final_price" type="number" class="w-full border-gray-200 rounded-lg text-sm focus:ring-[#BB4D00] focus:border-[#BB4D00]" placeholder="Harga deal">
-                                <button @click="updatePrice" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg text-xs font-bold transition">Simpan</button>
+                                <input 
+                                    v-model="form.final_price" 
+                                    type="number" 
+                                    class="w-full border-gray-200 rounded-lg text-sm focus:ring-[#BB4D00] focus:border-[#BB4D00]" 
+                                    placeholder="Contoh: 350000"
+                                >
+                                <button 
+                                    @click="updatePrice" 
+                                    :disabled="form.processing"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg text-xs font-bold transition flex items-center"
+                                >
+                                    {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+                                </button>
                             </div>
+                            <p v-if="form.errors.final_price" class="text-red-500 text-[10px] mt-1">{{ form.errors.final_price }}</p>
                         </div>
                         
-                        <div v-else class="bg-green-50 p-3 rounded-lg border border-green-100">
-                            <p class="text-green-700 text-xs font-bold flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                Harga sudah ditetapkan
-                            </p>
+                        <div v-else class="space-y-3">
+                            <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                                <p class="text-green-700 text-xs font-bold flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    Harga deal telah ditetapkan
+                                </p>
+                            </div>
+
+                            <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Biaya Fix</p>
+                                    <p class="text-lg font-bold text-[#BB4D00]">Rp {{ (report.final_price).toLocaleString('id-ID') }}</p>
+                                </div>
+                                
+                                <div v-if="report.status === 'pending'" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+                                    Belum Dibayar
+                                </div>
+                                <div v-else-if="report.status === 'payment_verification' || report.status === 'process'" class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+                                    Sudah Dibayar
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
-                            <div>
-                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Biaya Fix</p>
-                                <p class="text-lg font-bold text-[#BB4D00]">Rp {{ (report.final_price || 0).toLocaleString('id-ID') }}</p>
-                            </div>
-                            <div class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">Belum Bayar</div>
-                        </div>
                     </div>
                 </div>
 

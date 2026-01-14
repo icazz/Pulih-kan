@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\Vendor;
 use App\Models\ReportAttachment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Jangan lupa ini
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use Illuminate\Support\Facades\Storage;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ReportController extends Controller
 {
@@ -23,18 +25,15 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi: Gunakan nama variabel BAHASA INGGRIS (Sesuai Vue & Database)
         $data = $request->validate([
             'title' => 'required',
             'location' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
             'drive_link' => 'nullable|url',
-            
-            // PERUBAHAN DISINI: Samakan dengan Vue form
-            'deskripsi' => 'required',        // Dulu: deskripsi
-            'house_size' => 'nullable',         // Dulu: luas_rumah
-            'damage_types' => 'nullable|array', // Dulu: kerusakan
+            'deskripsi' => 'required', 
+            'house_size' => 'nullable',
+            'damage_types' => 'nullable|array',
         ]);
 
         // 2. Simpan ke Database
@@ -45,9 +44,7 @@ class ReportController extends Controller
             'latitude' => $data['latitude'],
             'longitude' => $data['longitude'],
             'status' => 'verification',
-            'drive_link' => $data['drive_link'],
-            
-            // PERUBAHAN DISINI: Tidak perlu mapping ribet lagi karena namanya sudah sama
+            'drive_link' => $data['drive_link'] ?? null,
             'description'  => $data['deskripsi'],  
             'house_size'   => $data['house_size'],    
             'damage_types' => $data['damage_types'],  
@@ -95,7 +92,7 @@ class ReportController extends Controller
     public function show($id)
     {
         // 1. PENTING: Gunakan with('vendor') agar data mitra yang dipilih ikut terkirim ke Vue
-        $report = Report::with(['user', 'vendor'])->findOrFail($id);
+        $report = Report::with(['user', 'vendor', 'review'])->findOrFail($id);
         
         if ($report->user_id !== Auth::id()) abort(403);
 
@@ -225,6 +222,70 @@ class ReportController extends Controller
             'total_payment' => $total_payment,
             'auth' => ['user' => auth()->user()]
         ]);
+    }
+
+    public function storePayment(Request $request, $id)
+    {
+        $report = Report::findOrFail($id);
+
+        if ($report->user_id !== Auth::id()) {
+            abort(403, 'Aksi tidak diizinkan.');
+        }
+
+        // Validasi String (Link)
+        $request->validate([
+            'payment_type' => 'required',
+            'contract'     => 'required|string',
+            'proof'        => 'required|string',
+        ]);
+
+        try {
+            // HANYA UPDATE DATA PEMBAYARAN, JANGAN UBAH STATUS
+            $report->update([
+                'payment_method' => $request->payment_type,
+                'contract_file'  => $request->contract,
+                'payment_proof'  => $request->proof,
+            ]);
+
+            return redirect()->route('reports.show', $id)->with('message', 'Bukti pembayaran berhasil dikirim! Mohon tunggu admin.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal menyimpan: ' . $e->getMessage()]);
+        }
+    }
+
+    public function complete($id)
+    {
+        // Cari laporan milik user yang sedang login
+        $report = Report::where('user_id', Auth::id())->findOrFail($id);
+
+        // Update status jadi completed dan progress 100%
+        $report->update([
+            'status' => 'completed',
+            'progress' => 100
+        ]);
+
+        return back()->with('message', 'Terima kasih! Pesanan telah ditandai selesai.');
+    }
+
+    public function storeReview(Request $request, $id)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string'
+        ]);
+
+        $report = Report::findOrFail($id);
+
+        \App\Models\Review::create([
+            'report_id' => $report->id,
+            'user_id' => auth()->id(),
+            'vendor_id' => $report->vendor_id,
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+        ]);
+
+        return back()->with('message', 'Ulasan berhasil dikirim!');
     }
 
     // --- 6. ACTION LAINNYA ---
