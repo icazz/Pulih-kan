@@ -19,14 +19,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const props = defineProps({
     report: Object, 
     auth: Object,
-    recommendedVendors: Array 
+    // recommendedVendors dihapus karena Admin tidak perlu memilih lagi
 });
 
 const form = useForm({ 
     action: '', 
     price: props.report.price || '', 
     category: props.report.category || '',
-    vendor_id: '' 
+    // vendor_id dihapus
 });
 
 onMounted(() => {
@@ -46,16 +46,13 @@ onMounted(() => {
 const submitAction = (action) => {
     if (!confirm('Apakah Anda yakin ingin memproses status ini?')) return;
     
-    // 1. Set Action
     form.action = action;
 
-    // 2. Definisi URL Manual (Pasti Benar)
-    // Perhatikan ada '/status' di belakangnya
+    // URL Manual
     const url = `/admin/reports/${props.report.id}/status`;
 
-    console.log("MENGIRIM KE URL:", url); // Cek console browser (F12) nanti
+    console.log("MENGIRIM KE URL:", url); 
 
-    // 3. Kirim Patch
     form.patch(url, {
         preserveScroll: true,
         onSuccess: () => { 
@@ -152,7 +149,7 @@ const submitAction = (action) => {
                     </div>
 
                     <label class="text-xs font-bold text-orange-800 uppercase tracking-widest block mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#BB4D00]"></span> Mitra Pelaksana
+                        <span class="w-2 h-2 rounded-full bg-[#BB4D00]"></span> Mitra Pelaksana (Dipilih User)
                     </label>
                     <div class="flex items-start gap-4 relative z-10">
                         <div class="w-12 h-12 rounded-full bg-[#BB4D00] text-white flex items-center justify-center font-bold text-xl shadow-md">
@@ -185,7 +182,7 @@ const submitAction = (action) => {
                     </h3>
 
                     <div v-if="report.status === 'verification'" class="bg-orange-50 p-6 rounded-2xl border border-orange-200">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-2 gap-4 mb-6">
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1">Kategori Kerusakan</label>
                                 <select v-model="form.category" class="w-full rounded-xl border-gray-300 focus:ring-[#BB4D00] focus:border-[#BB4D00]">
@@ -201,33 +198,9 @@ const submitAction = (action) => {
                             </div>
                         </div>
 
-                        <div class="mb-6">
-                            <label class="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">Rekomendasi Mitra (Terdekat)</label>
-                            <div v-if="recommendedVendors.length > 0" class="space-y-2">
-                                <label v-for="vendor in recommendedVendors" :key="vendor.id" 
-                                    class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition hover:bg-white"
-                                    :class="form.vendor_id === vendor.id ? 'bg-orange-100 border-[#BB4D00] ring-1 ring-[#BB4D00]' : 'bg-white/50 border-orange-200'">
-                                    
-                                    <div class="flex items-center gap-3">
-                                        <input type="radio" :value="vendor.id" v-model="form.vendor_id" class="text-[#BB4D00] focus:ring-[#BB4D00]">
-                                        <div>
-                                            <p class="font-bold text-gray-800 text-sm">{{ vendor.nama_mitra }}</p>
-                                            <p class="text-xs text-gray-500">{{ vendor.no_telepon }}</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-mono font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded">
-                                        {{ parseFloat(vendor.distance).toFixed(2) }} km
-                                    </span>
-                                </label>
-                            </div>
-                            <div v-else class="text-sm text-gray-500 italic p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                Tidak ada mitra terverifikasi yang ditemukan di database.
-                            </div>
-                        </div>
-
                         <div class="flex gap-3">
-                            <button @click="submitAction('verify')" :disabled="form.processing || !form.price || !form.category || !form.vendor_id" class="flex-1 bg-[#BB4D00] hover:bg-[#903000] text-white py-3 rounded-xl font-bold transition disabled:opacity-50 shadow-lg shadow-orange-200 disabled:cursor-not-allowed">
-                                Verifikasi, Pilih Mitra & Kirim
+                            <button @click="submitAction('verify')" :disabled="form.processing || !form.price || !form.category" class="flex-1 bg-[#BB4D00] hover:bg-[#903000] text-white py-3 rounded-xl font-bold transition disabled:opacity-50 shadow-lg shadow-orange-200 disabled:cursor-not-allowed">
+                                Verifikasi & Kirim Penawaran
                             </button>
                             <button @click="submitAction('cancel')" class="px-6 py-3 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 transition">
                                 Tolak
@@ -236,7 +209,8 @@ const submitAction = (action) => {
                     </div>
 
                     <div v-else-if="report.status === 'pending'" class="bg-blue-50 p-6 rounded-2xl border border-blue-200 text-center">
-                        <h4 class="text-blue-900 font-bold mb-1">Menunggu Pembayaran User</h4>
+                        <h4 class="text-blue-900 font-bold mb-1">Menunggu Pilihan Mitra & Pembayaran User</h4>
+                        <p class="text-sm text-blue-600 mb-4">User sedang memilih mitra dan melakukan pembayaran.</p>
                         <p class="text-2xl font-black text-blue-600 mb-6">Rp {{ parseInt(form.price).toLocaleString('id-ID') }}</p>
                         
                         <button @click="submitAction('confirm_payment')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-blue-200">

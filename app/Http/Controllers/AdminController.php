@@ -66,7 +66,6 @@ class AdminController extends Controller
             $request->validate([
                 'price' => 'required|numeric|min:0',
                 'category' => 'required|string',
-                'vendor_id' => 'required|exists:vendors,id', // Wajib pilih mitra
             ]);
 
             // 2. Simpan vendor_id ke database
@@ -74,7 +73,6 @@ class AdminController extends Controller
                 'price' => $request->price,
                 'category' => $request->category,
                 'status' => 'pending',
-                'vendor_id' => $request->vendor_id // <--- DATA BARU DISIMPAN DISINI
             ]);
         }
         elseif ($request->action === 'confirm_payment') {

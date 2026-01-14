@@ -25,6 +25,9 @@ class Report extends Model
         'progress',
         'damage_types', // TAMBAHAN: Array Checkbox
         'house_size',   // TAMBAHAN: Luas Rumah
+        'vendor_id',
+        'final_price',   // <--- BARU
+        'contract_file', // <--- BARU
     ];
 
     // PENTING: Casting agar 'damage_types' otomatis jadi Array saat diambil

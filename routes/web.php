@@ -23,10 +23,6 @@ Route::get('/', function () {
     ]);
 })->name('welcome');
 
-// --- VENDOR REGISTRATION ---
-Route::get('/vendor/register', [VendorController::class, 'create'])->name('vendor.register');
-Route::post('/vendor/register', [VendorController::class, 'store'])->name('vendor.store');
-
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -43,29 +39,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Detail & Penawaran (User bisa lihat penawaran)
     Route::get('/reports/history/{id}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{id}/offer', [ReportController::class, 'offer'])->name('reports.offer');
+    Route::post('/reports/{id}/select-vendor', [ReportController::class, 'selectVendor'])->name('reports.selectVendor');
 
     // Actions
     Route::put('/reports/{id}/cancel', [ReportController::class, 'cancel'])->name('reports.cancel');
     Route::delete('/reports/history/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
 
-    // Dummy
-    Route::get('/tentang-kami', function () { return "Halaman Tentang Kami"; })->name('about.us');
-
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Dummy
+    Route::get('/tentang-kami', function () { return "Halaman Tentang Kami"; })->name('about.us');
 });
 
 // --- ADMIN ROUTES ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () { 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
-    // Detail Laporan (INI YANG BARU)
-    // URL hasilnya: /admin/reports/{id} karena ada prefix('admin') di atas
     Route::get('/reports/{id}', [AdminController::class, 'show'])->name('admin.reports.show');
-
-    // Actions
     Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
     Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
 });

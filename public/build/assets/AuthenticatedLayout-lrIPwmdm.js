@@ -1,0 +1,1 @@
+import{_ as t}from"./Navbar-C0O0JlmN.js";import{a as s,b as a,d as o,A as r,o as n}from"./app-D2qwEyaT.js";const c={class:"min-h-screen bg-gray-50"},_={class:"pt-24 pb-12 font-['Montserrat']"},l={__name:"AuthenticatedLayout",setup(i){return(e,m)=>(n(),s("div",c,[a(t),o("main",_,[r(e.$slots,"default")])]))}};export{l as _};

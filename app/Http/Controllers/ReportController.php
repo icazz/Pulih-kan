@@ -83,25 +83,17 @@ class ReportController extends Controller
         ]);
     }
 
-    // --- 4. HALAMAN SHOW (Detail) ---
     public function show($id)
     {
-        $report = Report::findOrFail($id);
+        // 1. PENTING: Gunakan with('vendor') agar data mitra yang dipilih ikut terkirim ke Vue
+        $report = Report::with(['user', 'vendor'])->findOrFail($id);
+        
         if ($report->user_id !== Auth::id()) abort(403);
 
         return Inertia::render('Reports/Show', [
-            'report' => [
-                'id' => $report->id,
-                'title' => $report->title,
-                'description' => $report->description,
-                'location' => $report->location,
-                'drive_link' => $report->image_before,
-                'status' => $report->status,
-                'created_at_formatted' => $report->created_at->format('d M Y, H:i'),
-                'price' => $report->price ? 'Rp ' . number_format($report->price, 0, ',', '.') : 'Menunggu Estimasi',
-                'progress' => $report->progress ?? 0,
-            ],
-            // PENTING: Kirim Auth User disini juga
+            // 2. Jangan di-transform manual satu per satu agar relasi 'vendor' tidak hilang
+            // Kirim objek $report utuh, Laravel otomatis menyertakan relasi vendor di dalamnya
+            'report' => $report,
             'auth' => [
                 'user' => Auth::user(),
             ]
@@ -110,20 +102,101 @@ class ReportController extends Controller
 
     public function offer($id)
     {
-        // REVISI DISINI: Tambahkan with('vendor')
-        $report = Report::with('vendor')->findOrFail($id);
+        $report = Report::with('user')->findOrFail($id);
         
-        if ($report->user_id !== Auth::id()) abort(403);
+        if ($report->user_id !== \Illuminate\Support\Facades\Auth::id()) abort(403);
+
+        $latitude = $report->latitude;
+        $longitude = $report->longitude;
+        
+        // 1. Ambil Checklist Kerusakan dari User
+        // Contoh: ["Pembersihan Lumpur dan Puing", "Atap Bocor"]
+        $damageTypes = $report->damage_types ?? []; 
+
+        // 2. Query Dasar: Hitung Jarak & Filter Verified
+        $query = \App\Models\Vendor::select('*')
+            ->selectRaw("
+                (6371 * acos(
+                    cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + 
+                    sin(radians(?)) * sin(radians(latitude))
+                )) AS distance
+            ", [$latitude, $longitude, $latitude])
+            ->where(function($q) {
+                $q->where('status', 'verified')
+                  ->orWhere('is_verified', true);
+            });
+
+        // 3. LOGIC PENCARIAN CERDAS (MATCHING JASA)
+        if (!empty($damageTypes)) {
+            $query->where(function($q) use ($damageTypes) {
+                
+                // Loop setiap keluhan user
+                foreach ($damageTypes as $type) {
+                    // Cari vendor yang punya jasa SAMA PERSIS dengan keluhan
+                    // Contoh: User ceklis "Pembersihan Lumpur...", cari vendor yang punya layanan itu.
+                    $q->orWhereJsonContains('jenis_jasa', $type);
+                }
+                
+                // SELALU SERTAKAN: Vendor spesialis "Lainnya" (Palugada/Serabutan)
+                $q->orWhereJsonContains('jenis_jasa', 'Lainnya');
+            });
+        } 
+        else {
+            // FALLBACK: Jika user tidak menceklis apapun, cari berdasarkan Kategori Umum
+            if ($report->category === 'Ringan') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('jenis_jasa', 'Pengecatan')
+                      ->orWhereJsonContains('jenis_jasa', 'Perbaikan Minor')
+                      ->orWhereJsonContains('jenis_jasa', 'Lainnya');
+                });
+            } elseif ($report->category === 'Sedang') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('jenis_jasa', 'Kelistrikan')
+                      ->orWhereJsonContains('jenis_jasa', 'Atap Bocor / Rusak')
+                      ->orWhereJsonContains('jenis_jasa', 'Lainnya');
+                });
+            } else { // Berat
+                 $query->where(function($q) {
+                    $q->whereJsonContains('jenis_jasa', 'Renovasi Total')
+                      ->orWhereJsonContains('jenis_jasa', 'Struktur Bangunan')
+                      ->orWhereJsonContains('jenis_jasa', 'Lainnya');
+                });
+            }
+        }
+
+        // 4. Ambil 5 Mitra Terdekat yang Lolos Filter di atas
+        $recommendedVendors = $query->orderBy('distance', 'asc')
+            ->limit(5)
+            ->get();
 
         $formattedPrice = 'Rp ' . number_format($report->price ?? 0, 0, ',', '.');
 
-        return Inertia::render('Reports/Offer', [
+        return \Inertia\Inertia::render('Reports/Offer', [
             'report' => $report,
             'formattedPrice' => $formattedPrice,
+            'recommendedVendors' => $recommendedVendors,
             'auth' => [
-                'user' => Auth::user(),
+                'user' => \Illuminate\Support\Facades\Auth::user(),
             ]
         ]);
+    }
+
+    public function selectVendor(Request $request, $id)
+    {
+        $report = Report::findOrFail($id);
+        if ($report->user_id !== Auth::id()) abort(403);
+
+        $request->validate([
+            'vendor_id' => 'required|exists:vendors,id'
+        ]);
+
+        // Simpan Vendor Pilihan User & Lanjut ke Proses Berikutnya
+        $report->update([
+            'vendor_id' => $request->vendor_id,
+            // Status bisa tetap 'pending' atau ubah ke 'waiting_payment' tergantung alur Anda
+        ]);
+
+        return redirect()->route('reports.show', $id)->with('success', 'Mitra berhasil dipilih! Silakan lakukan pembayaran.');
     }
 
     // --- 6. ACTION LAINNYA ---

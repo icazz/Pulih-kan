@@ -1,12 +1,28 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3'; // Tambah useForm
 import Navbar from '@/Components/Navbar.vue';
 import { computed } from 'vue';
 
 const props = defineProps({
     report: Object,
-    formattedPrice: String
+    formattedPrice: String,
+    recommendedVendors: Array // Data 5 Mitra Terdekat dari Controller
 });
+
+// Form untuk User memilih mitra
+const form = useForm({
+    vendor_id: ''
+});
+
+// Function kirim pilihan ke backend
+const submitSelection = () => {
+    if (!form.vendor_id) return alert("Harap pilih salah satu mitra vendor terlebih dahulu!");
+    
+    // Pastikan route ini ada di web.php: Route::post('/reports/{id}/select-vendor', ...)
+    form.post(route('reports.selectVendor', props.report.id), {
+        onSuccess: () => alert("Mitra berhasil dipilih! Melanjutkan ke pembayaran..."),
+    });
+};
 
 // REVISI: Mengambil data dari checklist kerusakan (damage_types)
 const layanan = computed(() => {
@@ -75,10 +91,37 @@ const layanan = computed(() => {
                     {{ layanan }}
                 </p>
 
-                <div class="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center text-gray-500">
+                <div class="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center text-gray-500 mb-4">
                     <span>Cari tahu vendormu di sini : <span class="bg-yellow-400 text-white text-xs px-2 py-1 rounded">Lihat Vendor</span></span>
                 </div>
 
+                <div v-if="!report.vendor && recommendedVendors && recommendedVendors.length > 0" class="space-y-3">
+                    <div v-for="vendor in recommendedVendors" :key="vendor.id" 
+                         class="relative flex items-center p-4 border rounded-xl cursor-pointer hover:bg-orange-50 transition"
+                         :class="form.vendor_id === vendor.id ? 'border-[#BB4D00] bg-orange-50 ring-1 ring-[#BB4D00]' : 'border-gray-200 bg-white'">
+                        
+                        <input type="radio" :name="'vendor'" :value="vendor.id" v-model="form.vendor_id" class="absolute right-4 text-[#BB4D00] focus:ring-[#BB4D00] h-5 w-5">
+                        
+                        <div class="flex-1 pr-8">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-gray-900 text-lg">{{ vendor.nama_mitra }}</span>
+                                <span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide">Verified</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                {{ vendor.alamat }}
+                            </div>
+                            <p class="text-xs font-mono text-[#BB4D00] mt-2 font-bold flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                Jarak: {{ parseFloat(vendor.distance).toFixed(2) }} KM dari lokasi Anda
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else-if="!report.vendor && recommendedVendors.length === 0" class="p-4 bg-red-50 text-red-600 text-center rounded-xl border border-red-100">
+                    Maaf, saat ini belum ada mitra terverifikasi yang tersedia di dekat lokasi Anda.
+                </div>
                 <div v-if="report.vendor" class="mt-2 p-4 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 flex flex-col gap-1 shadow-sm">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-lg text-[#28160A]">{{ report.vendor.nama_mitra }}</span>
@@ -92,10 +135,6 @@ const layanan = computed(() => {
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                         <span>{{ report.vendor.no_telepon }}</span>
                     </div>
-                </div>
-                
-                <div v-else class="mt-2 p-3 border border-red-200 rounded bg-red-50 text-red-600 text-sm italic">
-                    Belum ada mitra yang ditugaskan oleh admin.
                 </div>
             </div>
 
@@ -119,7 +158,9 @@ const layanan = computed(() => {
                     Kembali
                 </Link>
                 
-                <button class="px-8 py-3 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2 bg-gradient-to-r from-[#552300] to-[#BB4D00]">
+                <button @click="submitSelection" 
+                    :disabled="form.processing || (!form.vendor_id && !report.vendor)"
+                    class="px-8 py-3 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2 bg-gradient-to-r from-[#552300] to-[#BB4D00] disabled:opacity-50 disabled:cursor-not-allowed">
                     Ajukan Kerja Sama <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
             </div>
