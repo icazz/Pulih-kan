@@ -181,24 +181,28 @@ onMounted(() => {
                     <div class="mb-10">
                         <h2 class="text-2xl font-bold text-[#4F3726] mb-6 border-l-4 border-[#47622A] pl-4">Area & Lokasi Kerja</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            
                             <div class="space-y-2">
-                                <label class="text-[#4F3726] font-semibold text-sm">Provinsi</label>
-                                <select v-model="form.provinsi" class="w-full bg-white border border-[#A89078] rounded-xl px-5 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#47622A] focus:outline-none cursor-pointer">
-                                    <option value="" disabled selected>Pilih Provinsi</option>
-                                    <option value="jawa_timur">Jawa Timur</option>
-                                    <option value="jawa_tengah">Jawa Tengah</option>
-                                </select>
+                                <label class="text-[#4F3726] font-semibold text-sm ml-1">Provinsi</label>
+                                <input 
+                                    v-model="form.provinsi" 
+                                    type="text" 
+                                    placeholder="Contoh: Jawa Timur" 
+                                    class="w-full bg-white border border-[#A89078] rounded-xl px-5 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#47622A] focus:outline-none shadow-sm"
+                                >
                             </div>
+
                             <div class="space-y-2">
-                                <label class="text-[#4F3726] font-semibold text-sm">Kecamatan / Kota</label>
-                                <select v-model="form.kota" class="w-full bg-white border border-[#A89078] rounded-xl px-5 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#47622A] focus:outline-none cursor-pointer">
-                                    <option value="" disabled selected>Pilih Kota</option>
-                                    <option value="lamongan">Lamongan</option>
-                                    <option value="surabaya">Surabaya</option>
-                                </select>
+                                <label class="text-[#4F3726] font-semibold text-sm ml-1">Kecamatan / Kota</label>
+                                <input 
+                                    v-model="form.kota" 
+                                    type="text" 
+                                    placeholder="Contoh: Surabaya" 
+                                    class="w-full bg-white border border-[#A89078] rounded-xl px-5 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#47622A] focus:outline-none shadow-sm"
+                                >
                             </div>
                             <div class="space-y-2 md:col-span-2">
-                                <label class="text-[#4F3726] font-semibold text-sm">Alamat Lengkap</label>
+                                <label class="text-[#4F3726] font-semibold text-sm ml-1">Alamat Lengkap</label>
                                 <input v-model="form.alamat" type="text" placeholder="Jl. Nama Jalan, No. Rumah, RT/RW" class="w-full bg-white border border-[#A89078] rounded-xl px-5 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#47622A] shadow-sm focus:outline-none">
                             </div>
                         </div>

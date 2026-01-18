@@ -85,6 +85,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::patch('/reports/{id}', [AdminController::class, 'update'])->name('admin.reports.update');
     Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
     Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
+    Route::get('/vendors/{id}', [AdminController::class, 'showVendor'])->name('admin.vendors.show');
 });
 
 require __DIR__.'/auth.php';

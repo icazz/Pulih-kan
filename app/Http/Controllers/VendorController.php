@@ -33,8 +33,8 @@ class VendorController extends Controller
             'email'        => 'required|email|max:255',
             'jenis_jasa'   => 'required|array|min:1',
             'jasa_lainnya' => 'nullable|string',
-            'provinsi'     => 'required|string',
-            'kota'         => 'required|string',
+            'provinsi'     => 'required|string|max:100',
+            'kota'         => 'required|string|max:100',
             'alamat'       => 'required|string',
             'latitude'     => 'required',
             'longitude'    => 'required',
@@ -48,14 +48,34 @@ class VendorController extends Controller
             ])
         );
 
-        return redirect()->route('welcome')->with('message', 'Pendaftaran berhasil dikirim! Mohon tunggu verifikasi admin.');
+        return redirect()->route('vendor.dashboard');
     }
 
     public function dashboard()
     {
-        $vendor = auth()->user()->vendor;
-        // ... (logika proteksi/verifikasi sama seperti sebelumnya)
+        $user = auth()->user();
+        $vendor = $user->vendor;
+        // 1. Cek apakah user sudah daftar jadi vendor?
+        if (!$vendor) {
+            return redirect()->route('vendor.register');
+        }
 
+        // 2. LOGIKA UTAMA: Cek Status
+        // Jika status masih pending, tampilkan halaman Tunggu Verifikasi
+        if ($vendor->status === 'pending') {
+            return Inertia::render('Vendor/WaitingVerification', [
+                'vendor' => $vendor,
+                'auth' => ['user' => $user] // Tetap kirim auth untuk Navbar
+            ]);
+        }
+
+        // 3. Jika status Rejected (Ditolak), lempar ke halaman perbaikan data
+        if ($vendor->status === 'rejected') {
+            return redirect()->route('vendor.register')
+                ->with('error', 'Maaf, pendaftaran Anda ditolak. Silakan perbaiki data.');
+        }
+
+        // 4. Jika lolos (status == verified), baru jalankan query Dashboard yang berat ini
         $reports = Report::with('user')
             ->where('vendor_id', $vendor->id)
             ->whereIn('status', ['pending', 'process', 'completed', 'cancelled'])
@@ -80,7 +100,7 @@ class VendorController extends Controller
         return Inertia::render('Vendor/Dashboard', [
             'vendor' => $vendor,
             'reports' => $transformedReports,
-            'auth' => ['user' => auth()->user()] // Wajib untuk Navbar
+            'auth' => ['user' => $user]
         ]);
     }
 
