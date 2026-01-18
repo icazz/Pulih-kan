@@ -99,6 +99,16 @@ class AdminController extends Controller
         ]);
     }
 
+    public function showVendor($id)
+    {
+        $vendor = Vendor::findOrFail($id);
+
+        return Inertia::render('Admin/VendorDetail', [
+            'vendor' => $vendor,
+            'auth' => auth()->user()
+        ]);
+    }
+
     public function update(Request $request, $id)
     {
         $report = Report::findOrFail($id);
