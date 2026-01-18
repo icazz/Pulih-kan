@@ -24,6 +24,11 @@ const updatePrice = () => {
     });
 };
 
+const formatPrice = (value) => {
+    if (!value) return 'Rp 0';
+    return 'Rp ' + parseFloat(value).toLocaleString('id-ID', { minimumFractionDigits: 0 });
+};
+
 const whatsappLink = computed(() => {
     let phone = props.report.user?.no_telepon || ''; 
     if (phone.startsWith('0')) phone = '62' + phone.slice(1);
@@ -56,6 +61,26 @@ const openDrive = (url) => {
     if (!url) return alert("Link Google Drive tidak tersedia.");
     const validUrl = url.startsWith('http') ? url : `https://${url}`;
     window.open(validUrl, '_blank');
+};
+
+const cancelOrder = () => {
+    // 1. Konfirmasi agar tidak terpencet tidak sengaja
+    if (!confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Pesanan akan kembali terbuka untuk mitra lain.')) {
+        return;
+    }
+
+    // 2. Kirim request ke backend
+    // PERBAIKAN: Gunakan nama route yang benar sesuai web.php ('vendor.reports.cancelSelection')
+    router.post(route('vendor.reports.cancelSelection', props.report.id), {}, {
+        onSuccess: () => {
+            alert('Pesanan berhasil dibatalkan.');
+            // Redirect otomatis diurus oleh Controller (ke Dashboard)
+        },
+        onError: (err) => {
+            console.error(err);
+            alert('Gagal membatalkan pesanan. ' + (err.message || ''));
+        }
+    });
 };
 </script>
 
@@ -134,7 +159,7 @@ const openDrive = (url) => {
                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1">
-                            <h4 class="font-bold text-gray-800 mb-2">Kerja Sama Disetujui Vendor</h4>
+                            <h4 class="font-bold text-gray-800 mb-2">Kerja Sama Disetujui Client</h4>
                             <p class="text-sm text-gray-500 mb-6 leading-relaxed">Diskusikan harga final dengan client melalui chat, lalu input biaya akhir pada panel informasi pembayaran.</p>
                             
                             <div class="flex flex-wrap gap-3">
@@ -186,7 +211,7 @@ const openDrive = (url) => {
                             <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
                                 <div>
                                     <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Biaya Fix</p>
-                                    <p class="text-lg font-bold text-[#BB4D00]">Rp {{ (report.final_price).toLocaleString('id-ID') }}</p>
+                                    <p class="text-lg font-bold text-[#BB4D00]">{{ formatPrice(report.final_price) }}</p>
                                 </div>
                                 
                                 <div v-if="report.status === 'pending'" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
@@ -224,19 +249,29 @@ const openDrive = (url) => {
 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 class="font-bold text-gray-800 mb-4">Tindakan Pesanan</h3>
-                    <button v-if="report.status === 'pending'" 
-                            @click="handleCancelTask(report.id)"
-                            class="w-full py-3 mb-3 border-2 border-red-100 text-red-500 font-bold rounded-xl hover:bg-red-50 transition flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        Batalkan Pesanan
-                    </button>
+                    
+                    <div class="flex flex-col gap-3">
+                        
+                        <button 
+                            v-if="report.status === 'pending' && !report.final_price" 
+                            @click="cancelOrder" 
+                            class="w-full bg-red-50 text-red-600 px-4 py-3 rounded-xl font-bold border border-red-200 hover:bg-red-100 transition"
+                        >
+                            Batalkan Pesanan
+                        </button>
 
-                    <button :disabled="report.status !== 'process'"
-                            :class="report.status === 'process' ? 'bg-[#4B741F] hover:bg-[#3d5e18] shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
-                            class="w-full py-4 text-white font-bold rounded-xl transition">
-                        Tandai Selesai
-                    </button>
-                    <p v-if="report.status === 'process'" class="text-[10px] text-gray-400 mt-3 text-center italic">Klik jika pekerjaan telah rampung 100%.</p>
+                        <div>
+                            <button :disabled="report.status !== 'process'"
+                                    :class="report.status === 'process' ? 'bg-[#4B741F] hover:bg-[#3d5e18] text-white shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                                    class="w-full py-4 font-bold rounded-xl transition">
+                                Tandai Selesai
+                            </button>
+                            <p v-if="report.status === 'process'" class="text-[10px] text-gray-400 mt-2 text-center italic">
+                                Klik jika pekerjaan telah rampung 100%.
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
