@@ -705,7 +705,7 @@ const user = computed(() => page.props.auth.user);
                             </svg>
                             <span
                                 class="text-[#A6A09B] text-sm hover:text-white transition-colors cursor-pointer"
-                                >pulihkan@gmail.com</span
+                                >pulihkanofficial@gmail.com</span
                             >
                         </li>
 
