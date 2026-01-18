@@ -9,6 +9,12 @@ const props = defineProps({
     auth: Object
 });
 
+const formatPrice = (value) => {
+    if (!value) return 'Rp 0';
+    // Mengubah string/angka menjadi format Rupiah (Contoh: 150000.00 -> 150.000)
+    return 'Rp ' + parseFloat(value).toLocaleString('id-ID', { minimumFractionDigits: 0 });
+};
+
 const activeFilter = ref("Semua");
 const filters = ["Semua", "pending", "process", "completed", "cancelled"];
 
@@ -150,12 +156,13 @@ const openDrive = (url) => {
                                 </span>
                             </div>
 
-                            <div class="text-right mt-6">
-                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">
-                                    {{ report.price_final > 0 ? 'Total Biaya Fix' : 'Estimasi Admin' }}
-                                </p>
-                                <p class="text-2xl font-black text-[#8B4513]">
-                                    Rp {{ (report.price_final || report.price_estimasi || 0).toLocaleString('id-ID') }}
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">
+                                    {{ report.price_final ? 'Total Biaya Fix' : 'Estimasi Awal' }}
+                                </span>
+                                
+                                <p class="text-xl font-black text-[#4F3726]">
+                                    {{ formatPrice(report.price_final || report.price_estimasi) }}
                                 </p>
                             </div>
                             
