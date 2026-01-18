@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -19,14 +20,12 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const props = defineProps({
     report: Object, 
     auth: Object,
-    // recommendedVendors dihapus karena Admin tidak perlu memilih lagi
 });
 
 const form = useForm({ 
     action: '', 
-    price: props.report.price || '', 
+    price: props.report.price ? parseInt(props.report.price) : '',
     category: props.report.category || '',
-    // vendor_id dihapus
 });
 
 onMounted(() => {
@@ -44,23 +43,38 @@ onMounted(() => {
 });
 
 const submitAction = (action) => {
-    if (!confirm('Apakah Anda yakin ingin memproses status ini?')) return;
+    if (!confirm('Apakah Anda yakin?')) return;
     
     form.action = action;
 
-    // URL Manual
-    const url = `/admin/reports/${props.report.id}/status`;
+    // --- PERHATIKAN BAGIAN INI ---
+    let url = '';
 
-    console.log("MENGIRIM KE URL:", url); 
+    if (action === 'verify') {
+        // Jika Verifikasi, gunakan rute UPDATE (yang baru kita buat)
+        // URL: /admin/reports/{id}
+        url = route('admin.reports.update', props.report.id);
+    } else {
+        // Jika konfirmasi bayar/selesai, gunakan rute STATUS (lama)
+        // URL: /admin/reports/{id}/status
+        url = route('admin.updateStatus', props.report.id);
+    }
+    // -----------------------------
 
     form.patch(url, {
         preserveScroll: true,
+        // PENTING: Matikan preserveState agar data report direfresh total dari server
+        preserveState: false, 
+        
         onSuccess: () => { 
-            alert('Status berhasil diperbarui!'); 
+            // Opsional: Paksa reload manual jika preserveState: false masih kurang nendang
+            // router.reload({ only: ['report'] }); 
+            
+            alert('Berhasil diperbarui!'); 
         },
-        onError: (errors) => {
-            console.error("Error update:", errors);
-            alert("Gagal update status: " + JSON.stringify(errors));
+        onError: (err) => {
+            console.error(err);
+            alert('Gagal: ' + JSON.stringify(err));
         }
     });
 };

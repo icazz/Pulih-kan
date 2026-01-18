@@ -18,21 +18,20 @@ class Report extends Model
         'longitude',
         'status',
         'category',
-        'image_before', // Foto utama
-        'video_url',    // Opsional (bisa dipakai atau tidak)
-        'drive_link',   // TAMBAHAN: Link Google Drive
+        'image_before',
+        'video_url',
+        'drive_link',  
         'price',
         'progress',
-        'damage_types', // TAMBAHAN: Array Checkbox
-        'house_size',   // TAMBAHAN: Luas Rumah
+        'damage_types', 
+        'house_size',   
         'vendor_id',
-        'final_price',   // <--- BARU
-        'contract_file', // <--- BARU
-        'payment_method', // <--- TAMBAHKAN INI
+        'final_price',  
+        'contract_file',
+        'payment_method', 
         'payment_proof',
     ];
 
-    // PENTING: Casting agar 'damage_types' otomatis jadi Array saat diambil
     protected $casts = [
         'damage_types' => 'array',
     ];
@@ -49,13 +48,11 @@ class Report extends Model
 
     public function vendor()
     {
-        // Report milik satu Vendor (Belongs To)
         return $this->belongsTo(Vendor::class);
     }
 
     public function review()
     {
-        // Satu laporan memiliki satu review
         return $this->hasOne(Review::class);
     }
 }

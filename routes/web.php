@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () { 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/reports/{id}', [AdminController::class, 'show'])->name('admin.reports.show');
+    Route::patch('/reports/{id}', [AdminController::class, 'update'])->name('admin.reports.update');
     Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
     Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
 });
