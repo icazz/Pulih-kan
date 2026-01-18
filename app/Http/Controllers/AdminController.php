@@ -93,42 +93,27 @@ class AdminController extends Controller
     {
         $report = Report::with(['user', 'vendor'])->findOrFail($id);
         
-        $latitude = $report->latitude;
-        $longitude = $report->longitude;
-
-        // --- DEBUGGING START (Tambahkan ini) ---
-        // 1. Cek apakah koordinat laporan terbaca
-        if (!$latitude || !$longitude) {
-            dd("Koordinat Laporan Kosong/Null. Lat: $latitude, Long: $longitude");
-        }
-        // --- DEBUGGING END ---
-
-        $nearestVendors = [];
-
-        if ($latitude && $longitude) {
-            $nearestVendors = Vendor::select('*')
-                ->selectRaw("
-                    (6371 * acos(
-                        cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + 
-                        sin(radians(?)) * sin(radians(latitude))
-                    )) AS distance
-                ", [$latitude, $longitude, $latitude])
-                ->where('status', 'verified')     // <--- Pastikan ini sesuai database
-                ->orWhere('is_verified', true)    // <--- Atau ini
-                ->orderBy('distance', 'asc')
-                ->limit(5)
-                ->get();
-            
-            // --- DEBUGGING START ---
-            // 2. Cek apakah query menemukan vendor?
-            // dd($nearestVendors->toArray()); 
-            // --- DEBUGGING END ---
-        }
-
         return inertia('Admin/ReportDetail', [
             'report' => $report,
             'auth' => auth()->user(),
-            'recommendedVendors' => $nearestVendors 
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $report = Report::findOrFail($id);
+
+        $request->validate([
+            'price' => 'required|numeric|min:0',
+            'category' => 'required|string',
+        ]);
+
+        $report->update([
+            'price' => $request->price,
+            'category' => $request->category,
+            'status' => 'pending',
+        ]);
+
+        return back()->with('message', 'Penawaran berhasil dikirim!');
     }
 }
