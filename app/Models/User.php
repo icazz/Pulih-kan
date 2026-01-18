@@ -62,4 +62,9 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    public function getAvatarAttribute($value)
+    {
+        return $value ?? 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+    }
 }
