@@ -325,8 +325,14 @@ const submitReview = () => {
                                 </div>
                             </div>
                             <div class="space-y-2 pt-2">
-                                <a :href="whatsappLink" target="_blank" class="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] hover:bg-[#1DA851] text-white font-bold rounded-xl transition shadow-md">
-                                Chat
+                                <a 
+                                    v-if="report.vendor"
+                                    :href="`/chat/${report.vendor.user_id}`" 
+                                    target="_blank"
+                                    class="block w-full text-center py-3 bg-[#2F2F2F] hover:bg-black text-white rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2 mt-4"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                    Chat dengan Mitra
                                 </a>
                             </div>
                         </div>
