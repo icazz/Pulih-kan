@@ -26,6 +26,16 @@ Route::get('/', function () {
 Route::get('/mitra-vendor', [VendorController::class, 'list'])->name('vendor.list');
 // Halaman Detail Vendor
 Route::get('/mitra-vendor/{id}', [VendorController::class, 'show'])->name('vendor.show');
+Route::get('/donasi', function () {
+    return Inertia::render('Donasi', [
+        'auth' => ['user' => Illuminate\Support\Facades\Auth::user()] // Kirim data auth jaga-jaga user sudah login
+    ]);
+})->name('donasi');
+Route::get('/relawan', function () {
+    return Inertia::render('Relawan', [
+        'auth' => ['user' => Illuminate\Support\Facades\Auth::user()] // Kirim data auth jaga-jaga user sudah login
+    ]);
+})->name('relawan');
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -46,6 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Aksi Update Harga Akhir oleh Mitra
         Route::patch('/reports/{id}', [VendorController::class, 'updateFinalPrice'])->name('reports.updateFinalPrice');
         Route::patch('/reports/{id}/complete', [VendorController::class, 'completeProject'])->name('reports.complete');
+        Route::post('/reports/{id}/contract', [VendorController::class, 'uploadContract'])
+            ->name('reports.uploadContract');
 
     });
 
@@ -62,6 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Actions
     Route::put('/reports/{id}/cancel', [ReportController::class, 'cancel'])->name('reports.cancel');
     Route::delete('/reports/history/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
+    Route::post('/reports/{id}/contract', [ReportController::class, 'uploadContract'])
+        ->name('reports.uploadContract');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -83,7 +97,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/reports/{id}', [AdminController::class, 'show'])->name('admin.reports.show');
     Route::patch('/reports/{id}', [AdminController::class, 'update'])->name('admin.reports.update');
-    Route::patch('/reports/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.updateStatus');
+    Route::patch('/reports/{id}/status', [AdminController::class, 'update'])->name('admin.updateStatus');
     Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
     Route::get('/vendors/{id}', [AdminController::class, 'showVendor'])->name('admin.vendors.show');
 });

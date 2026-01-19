@@ -18,9 +18,7 @@ class Report extends Model
         'longitude',
         'status',
         'category',
-        'image_before',
-        'video_url',
-        'drive_link',  
+        'evidence_files',
         'price',
         'progress',
         'damage_types', 
@@ -34,6 +32,7 @@ class Report extends Model
 
     protected $casts = [
         'damage_types' => 'array',
+        'evidence_files' => 'array',
     ];
 
     public function user()

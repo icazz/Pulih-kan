@@ -67,43 +67,48 @@ const user = computed(() => page.props.auth.user);
                     mudah.
                 </p>
 
-                <div class="flex flex-wrap gap-4">
-                    <Link
-                        :href="user ? route('reports.index') : route('login')"
-                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#BB4D00] to-[#973C00] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
-                    >
-                        <img src="/images/icon-phone.png" alt="Phone" class="w-5 h-5 invert brightness-0 saturate-100" />
-                        <span>Ajukan Pemulihan Rumah</span>
-                    </Link>
+                <div class="flex flex-col gap-4 mt-6">
+    
+                    <div class="flex flex-wrap gap-4">
+                        <Link
+                            :href="$page.props.auth.user ? route('reports.index') : route('login')"
+                            class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#BB4D00] to-[#973C00] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                        >
+                            <img src="/images/icon-phone.png" alt="Phone" class="w-5 h-5 invert brightness-0 saturate-100" />
+                            <span>Ajukan Pemulihan Rumah</span>
+                        </Link>
 
-                    <Link
-                        v-if="$page.props.auth.user && $page.props.auth.user.vendor"
-                        :href="route('vendor.dashboard')"
-                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
-                    >
-                        <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                        <span>Dashboard Mitra</span>
-                    </Link>
+                        <Link
+                            :href="route('donasi')"
+                            class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#8B5E34] to-[#683910] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                        >
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <span>Donasi & Daftar Relawan</span>
+                        </Link>
+                    </div>
 
-                    <Link
-                        v-if="$page.props.auth.user && $page.props.auth.user.vendor && $page.props.auth.user.vendor.status !== 'rejected'"
-                        :href="route('vendor.dashboard')"
-                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
-                    >
-                        <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                        <span>Dashboard Mitra</span>
-                    </Link>
+                    <div v-if="$page.props.auth.user">
+                        
+                        <Link
+                            v-if="$page.props.auth.user.vendor && $page.props.auth.user.vendor.status !== 'rejected'"
+                            :href="route('vendor.dashboard')"
+                            class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                        >
+                            <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
+                            <span>Dashboard Mitra</span>
+                        </Link>
 
-                    <Link
-                        v-else-if="$page.props.auth.user && (!$page.props.auth.user.vendor || $page.props.auth.user.vendor.status === 'rejected')"
-                        :href="route('vendor.register')"
-                        class="flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
-                    >
-                        <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                        <span>
-                            {{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Dashboard Mitra' }}
-                        </span>
-                    </Link>
+                        <Link
+                            v-else
+                            :href="route('vendor.register')"
+                            class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
+                        >
+                            <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
+                            <span>{{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Daftar Sebagai Mitra' }}</span>
+                        </Link>
+
+                    </div>
+
                 </div>
             </div>
         </main>

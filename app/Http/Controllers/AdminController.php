@@ -56,39 +56,6 @@ class AdminController extends Controller
         }
     }
 
-    // --- BAGIAN INI YANG DIPERBARUI ---
-    public function updateStatus(Request $request, $id)
-    {
-        $report = Report::findOrFail($id);
-        
-        if ($request->action === 'verify') {
-            // 1. Tambahkan validasi vendor_id
-            $request->validate([
-                'price' => 'required|numeric|min:0',
-                'category' => 'required|string',
-            ]);
-
-            // 2. Simpan vendor_id ke database
-            $report->update([
-                'price' => $request->price,
-                'category' => $request->category,
-                'status' => 'pending',
-            ]);
-        }
-        elseif ($request->action === 'confirm_payment') {
-            $report->update(['status' => 'process']);
-        }
-        elseif ($request->action === 'complete') {
-            $report->update(['status' => 'completed', 'progress' => 100]);
-        }
-        elseif ($request->action === 'cancel') {
-            $report->update(['status' => 'cancelled']);
-        }
-
-        // Redirect kembali (bisa ke dashboard atau tetap di halaman detail)
-        return back()->with('message', 'Status laporan berhasil diperbarui!');
-    }
-
     public function show($id)
     {
         $report = Report::with(['user', 'vendor'])->findOrFail($id);
@@ -112,18 +79,36 @@ class AdminController extends Controller
     public function update(Request $request, $id)
     {
         $report = Report::findOrFail($id);
+        
+        // 1. Verifikasi Laporan Awal (Input Harga & Kategori)
+        if ($request->action === 'verify') {
+            $request->validate([
+                'price' => 'required|numeric|min:0',
+                'category' => 'required|string',
+            ]);
 
-        $request->validate([
-            'price' => 'required|numeric|min:0',
-            'category' => 'required|string',
-        ]);
+            $report->update([
+                'price' => $request->price,
+                'category' => $request->category,
+                'status' => 'pending', 
+            ]);
+        }
+        // 2. Konfirmasi Pembayaran
+        elseif ($request->action === 'confirm_payment') {
+            // Langsung ubah ke 'process' (database enum aman)
+            $report->update(['status' => 'process']);
+            
+            return back()->with('message', 'Pembayaran dikonfirmasi. Status berubah menjadi Dalam Pengerjaan.');
+        }
+        // 3. Selesaikan Pekerjaan
+        elseif ($request->action === 'complete') {
+            $report->update(['status' => 'completed', 'progress' => 100]);
+        }
+        // 4. Batalkan Pesanan
+        elseif ($request->action === 'cancel') {
+            $report->update(['status' => 'cancelled']);
+        }
 
-        $report->update([
-            'price' => $request->price,
-            'category' => $request->category,
-            'status' => 'pending',
-        ]);
-
-        return back()->with('message', 'Penawaran berhasil dikirim!');
+        return back()->with('message', 'Status laporan berhasil diperbarui!');
     }
 }

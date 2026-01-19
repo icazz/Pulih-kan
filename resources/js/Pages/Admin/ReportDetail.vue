@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -21,6 +21,20 @@ const props = defineProps({
     report: Object, 
     auth: Object,
 });
+
+const evidenceFiles = computed(() => {
+    if (!props.report.evidence_files) return [];
+    if (Array.isArray(props.report.evidence_files)) return props.report.evidence_files;
+    try {
+        return JSON.parse(props.report.evidence_files);
+    } catch (e) {
+        return [];
+    }
+});
+
+const isImage = (file) => {
+    return file.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
+};
 
 const form = useForm({ 
     action: '', 
@@ -133,25 +147,42 @@ const submitAction = (action) => {
                     </div>
                     
                     <div>
-                        <a v-if="report.drive_link" :href="report.drive_link" target="_blank" class="block w-full p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition cursor-pointer group relative z-20">
-                            <label class="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1 cursor-pointer group-hover:text-blue-500">Bukti Foto/Video</label>
-                            <div class="font-bold text-blue-700 flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                Buka Link Google Drive
-                            </div>
-                        </a>
-                        <div v-else class="block w-full p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed opacity-70">
-                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Bukti Foto/Video</label>
-                            <div class="font-bold text-gray-400 flex items-center gap-2">Tidak ada link dilampirkan</div>
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Bukti Foto/Video</label>
+                        
+                        <div v-if="evidenceFiles.length > 0" class="grid grid-cols-3 gap-2">
+                            <a 
+                                v-for="(file, index) in evidenceFiles" 
+                                :key="index"
+                                :href="`/storage/${file}`" 
+                                target="_blank"
+                                class="block aspect-square rounded-lg overflow-hidden border border-gray-200 relative group cursor-pointer"
+                            >
+                                <img 
+                                    v-if="isImage(file)" 
+                                    :src="`/storage/${file}`" 
+                                    class="w-full h-full object-cover transition duration-300 group-hover:scale-110" 
+                                    alt="Bukti"
+                                />
+                                <div v-else class="w-full h-full bg-black flex items-center justify-center text-white group-hover:bg-gray-900 transition">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                
+                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span class="bg-white text-xs font-bold px-2 py-1 rounded text-black shadow-sm">Buka</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div v-else class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                            <p class="text-sm text-gray-400 italic">Tidak ada lampiran foto/video.</p>
                         </div>
                     </div>
-
                     <div>
                         <a v-if="report.contract_file" :href="report.contract_file" target="_blank" class="block w-full p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition cursor-pointer group relative z-20">
                             <label class="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1 cursor-pointer group-hover:text-blue-500">Kontrak Kerja</label>
                             <div class="font-bold text-blue-700 flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                Buka Link Drive
+                                Lihat bukti kontrak
                             </div>
                         </a>
                         <div v-else class="block w-full p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed opacity-70">
@@ -165,7 +196,7 @@ const submitAction = (action) => {
                             <label class="text-xs font-bold text-blue-400 uppercase tracking-widest block mb-1 cursor-pointer group-hover:text-blue-500">Bukti Pembayaran</label>
                             <div class="font-bold text-blue-700 flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                                Buka Link Drive
+                                Lihat bukti pembayaran
                             </div>
                         </a>
                         <div v-else class="block w-full p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed opacity-70">
