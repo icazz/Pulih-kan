@@ -5,7 +5,6 @@ import Navbar from "@/Components/Navbar.vue";
 
 const props = defineProps({
     report: Object,
-    admin_fee: Number,
     auth: Object,
 });
 
@@ -23,27 +22,39 @@ const activeMethodDetails = computed(() => {
     return paymentMethods.find(m => m.name === selectedMethod.value);
 });
 
-// FORM UNTUK LINK (STRING)
+// --- PERUBAHAN 1: Form Proof jadi null (File) & Hapus Contract ---
 const form = useForm({
-    proof: '',      // String kosong (untuk link)
-    contract: '',   // String kosong (untuk link)
     payment_type: selectedMethod.value,
+    proof: null, // Siap menerima File Object
 });
 
-// HAPUS FUNGSI handleUpload... KARENA KITA PAKAI V-MODEL LANGSUNG
+const previewImage = ref(null);
+
+// --- PERUBAHAN 2: Handle Upload Gambar & Preview ---
+const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.proof = file;
+        // Buat preview gambar
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
 
 const submitPayment = () => {
-    // Validasi Sederhana
-    if (!form.contract) return alert("Harap isi Link Google Drive (Kontrak).");
-    if (!form.proof) return alert("Harap isi Link Bukti Transfer.");
+    if (!form.proof) return alert("Harap upload bukti transfer terlebih dahulu.");
     
-    // POST DATA (Tanpa forceFormData karena ini JSON biasa)
+    // --- PERUBAHAN 3: Gunakan forceFormData: true ---
     form.post(route("reports.storePayment", props.report.id), {
-        onSuccess: () => {
-            console.log("Berhasil!");
-        },
+        forceFormData: true, // Wajib untuk upload file di Inertia
+        onSuccess: () => alert("Bukti pembayaran berhasil dikirim!"),
         onError: (err) => {
-            console.error("Gagal mengirim:", err);
+            console.error(err);
+            // Tampilkan error detail jika ada
+            alert("Gagal mengirim: " + (err.proof || err.error || "Terjadi kesalahan server"));
         }
     });
 };
@@ -77,14 +88,8 @@ const copyToClipboard = (text) => {
         </div>
 
         <div class="max-w-6xl mx-auto px-6 mt-8">
-            <div class="bg-[#FFF8E6] border border-[#FFE08A] p-4 rounded-xl flex items-center gap-3 mb-6">
-                <svg class="w-6 h-6 text-[#B28900]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" /></svg>
-                <p class="text-sm text-[#856404]">
-                    <span class="font-bold">Batas Waktu Pembayaran:</span> Selesaikan pembayaran dalam <span class="font-bold text-[#BB4D00]">23 jam 45 menit</span>.
-                </p>
-            </div>
-
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <h3 class="font-bold text-lg mb-6">Pilih Metode Pembayaran</h3>
@@ -100,7 +105,6 @@ const copyToClipboard = (text) => {
 
                         <div class="bg-[#FDFCFB] border border-orange-100 rounded-2xl p-6">
                             <div class="flex items-center gap-2 text-[#BB4D00] font-bold text-sm mb-4">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-width="2" /></svg>
                                 Detail Pembayaran - {{ activeMethodDetails.name }}
                             </div>
                             <div class="space-y-4">
@@ -139,44 +143,39 @@ const copyToClipboard = (text) => {
                                 <p class="text-[10px] text-gray-400 uppercase font-bold">Jenis Pemulihan</p>
                                 <p class="font-bold text-gray-800">{{ report.title }}</p>
                             </div>
-                            <div class="pt-4 border-t border-gray-50">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-gray-800">Total</span>
-                                    <span class="text-xl font-black text-[#BB4D00]">{{ formatCurrency(report.final_price) }}</span>
-                                </div>
+                            <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
+                                <span class="font-bold text-gray-800">Total</span>
+                                <span class="text-xl font-black text-[#BB4D00]">{{ formatCurrency(report.final_price) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                            <h3 class="font-bold text-xs mb-1">Link Google Drive (Kontrak)</h3>
-                            <p class="text-[9px] text-gray-400 mb-2 italic">Pastikan link folder sudah di-set "Anyone with the link"</p>
+                            <h3 class="font-bold text-xs mb-1">Upload Bukti Transfer</h3>
+                            <p class="text-[9px] text-gray-400 mb-4 italic">Format: JPG, PNG, PDF (Maks. 5MB)</p>
                             
-                            <input type="url" v-model="form.contract" 
-                                placeholder="https://drive.google.com/..."
-                                class="w-full text-xs border-gray-200 rounded-lg p-2 focus:ring-[#BB4D00] focus:border-[#BB4D00]"
-                            />
-                            <p v-if="form.errors.contract" class="text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.contract }}</p>
-                        </div>
-
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                            <h3 class="font-bold text-xs mb-1">Link Bukti Transfer</h3>
-                            <p class="text-[9px] text-gray-400 mb-2 italic">Link gambar/PDF bukti pembayaran</p>
-                            
-                            <input type="url" v-model="form.proof" 
-                                placeholder="https://drive.google.com/..."
-                                class="w-full text-xs border-gray-200 rounded-lg p-2 focus:ring-[#BB4D00] focus:border-[#BB4D00]"
-                            />
-                            <p v-if="form.errors.proof" class="text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.proof }}</p>
+                            <div class="relative w-full border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition cursor-pointer group h-40 flex flex-col items-center justify-center overflow-hidden">
+                                <input type="file" @change="handleFileChange" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                
+                                <div v-if="previewImage" class="absolute inset-0 p-2 bg-white">
+                                    <img :src="previewImage" class="w-full h-full object-contain rounded-lg" alt="Preview Bukti">
+                                </div>
+                                <div v-else class="flex flex-col items-center text-gray-400 group-hover:text-gray-600">
+                                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <span class="text-[10px] font-bold">Klik atau geser foto ke sini</span>
+                                </div>
+                            </div>
+                            <p v-if="form.errors.proof" class="text-red-500 text-[10px] mt-2 font-bold">{{ form.errors.proof }}</p>
                         </div>
 
                         <button @click="submitPayment" :disabled="form.processing"
-                            class="w-full py-3 bg-[#BB4D00] text-white font-bold rounded-xl shadow-md transition uppercase text-[10px] tracking-widest hover:bg-[#a04100]">
-                            {{ form.processing ? 'Mengirim...' : 'Kirim Link & Bayar' }}
+                            class="w-full py-3 bg-[#BB4D00] text-white font-bold rounded-xl shadow-md transition uppercase text-[10px] tracking-widest hover:bg-[#a04100] disabled:opacity-50">
+                            {{ form.processing ? 'Mengirim...' : 'Kirim Bukti Pembayaran' }}
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

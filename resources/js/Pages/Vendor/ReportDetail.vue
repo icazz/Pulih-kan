@@ -1,12 +1,63 @@
 <script setup>
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
 import Navbar from "@/Components/Navbar.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps({
     report: Object,
     vendor: Object
 });
+
+const contractInput = ref(null);
+
+const triggerContractUpload = () => {
+    contractInput.value.click();
+};
+
+const handleContractUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        alert('Mohon upload file dalam format PDF.');
+        return;
+    }
+
+    if (confirm(`Apakah Anda yakin ingin mengunggah "${file.name}" sebagai kontrak kerja?`)) {
+        // Kita gunakan router manual (bukan useForm) agar lebih bersih untuk single file upload
+        router.post(route('vendor.reports.uploadContract', props.report.id), {
+            _method: 'post',
+            contract_file: file
+        }, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                alert('Kontrak berhasil diunggah!');
+                // HAPUS baris router.reload ini, biarkan Inertia yang refresh otomatis
+                // router.reload({ only: ['report'] }); 
+            },
+            onError: (errors) => {
+                console.error(errors);
+                alert('Gagal mengunggah kontrak.');
+            }
+        });
+    }
+};
+
+const evidenceFiles = computed(() => {
+    if (!props.report.evidence_files) return [];
+    if (Array.isArray(props.report.evidence_files)) return props.report.evidence_files;
+    try {
+        return JSON.parse(props.report.evidence_files);
+    } catch (e) {
+        return [];
+    }
+});
+
+// 2. Helper untuk cek ekstensi gambar
+const isImage = (file) => {
+    return file.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
+};
 
 const form = useForm({
     final_price: props.report.final_price || '',
@@ -91,16 +142,30 @@ const cancelOrder = () => {
     <div class="min-h-screen bg-[#FFFDF4] font-['Montserrat'] pb-20">
         <div class="w-full bg-gradient-to-r from-[#8FC555] to-[#4B692D] pt-32 pb-16 px-6">
             <div class="max-w-6xl mx-auto">
-                <Link :href="route('vendor.dashboard')" class="text-white/70 hover:text-white flex items-center gap-2 mb-6 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Kembali ke Dashboard
-                </Link>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    
+                    <Link :href="route('vendor.dashboard')" class="text-white/70 hover:text-white flex items-center gap-2 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Kembali ke Dashboard
+                    </Link>
+
+                    <a href="https://docs.google.com/document/d/1LYdgiC8T2FyuJtoUd2rndYsQIQ1ynflLHc_WRfBUhm8/edit?usp=sharing" 
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/50 text-white text-xs font-bold rounded-lg backdrop-blur-sm transition shadow-sm"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Template Kontrak Kerja
+                    </a>
+
+                </div>
+
                 <div class="flex flex-wrap items-center gap-3">
                     <h1 class="text-white text-4xl font-bold">REQ-{{ report.id }}</h1>
                     <span :class="`px-4 py-1.5 rounded-lg text-white text-[11px] font-bold uppercase tracking-wider shadow-md ${statusInfo.class}`">
                         {{ statusInfo.label }}
                     </span>
                 </div>
+                
                 <p class="text-white/80 text-xl mt-3 font-light">{{ report.title }}</p>
             </div>
         </div>
@@ -142,11 +207,35 @@ const cancelOrder = () => {
                                     <p class="text-gray-700 leading-relaxed">{{ report.description }}</p>
                                 </div>
                                 <div>
-                                    <p class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-1">Bukti Kerusakan</p>
-                                    <button @click="openDrive(report.drive_link)" class="mt-1 flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        Buka Google Drive
-                                    </button>
+                                    <p class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-2">Bukti Kerusakan</p>
+                                    
+                                    <div v-if="evidenceFiles.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                        <a 
+                                            v-for="(file, index) in evidenceFiles" 
+                                            :key="index"
+                                            :href="`/storage/${file}`" 
+                                            target="_blank"
+                                            class="block aspect-square rounded-lg overflow-hidden border border-gray-200 relative group cursor-pointer shadow-sm"
+                                        >
+                                            <img 
+                                                v-if="isImage(file)" 
+                                                :src="`/storage/${file}`" 
+                                                class="w-full h-full object-cover transition duration-300 group-hover:scale-110" 
+                                                alt="Bukti"
+                                            />
+                                            <div v-else class="w-full h-full bg-black flex items-center justify-center text-white group-hover:bg-gray-900 transition">
+                                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </div>
+                                            
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span class="bg-white text-xs font-bold px-2 py-1 rounded text-black shadow-sm hover:bg-gray-100">Lihat</span>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div v-else class="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 text-center border-dashed">
+                                        <p class="text-xs text-gray-400 italic">Tidak ada lampiran foto/video.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -162,8 +251,35 @@ const cancelOrder = () => {
                             <h4 class="font-bold text-gray-800 mb-2">Kerja Sama Disetujui Client</h4>
                             <p class="text-sm text-gray-500 mb-6 leading-relaxed">Diskusikan harga final dengan client melalui chat, lalu input biaya akhir pada panel informasi pembayaran.</p>
                             
-                            <div class="flex flex-wrap gap-3">
-                                <button class="flex-1 min-w-[140px] py-3 bg-[#4B741F] hover:bg-[#3d5e18] text-white font-bold rounded-xl shadow-md transition font-['Montserrat']">Download Kontrak</button>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <div class="flex-1 w-full">
+                                    <input 
+                                        type="file" 
+                                        ref="contractInput" 
+                                        class="hidden" 
+                                        accept="application/pdf"
+                                        @change="handleContractUpload"
+                                    />
+
+                                    <button 
+                                        @click="triggerContractUpload"
+                                        class="flex-1 w-full min-w-[140px] py-3 bg-[#4B741F] hover:bg-[#3d5e18] text-white font-bold rounded-xl shadow-md transition font-['Montserrat'] flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                        {{ report.contract_file ? 'Ganti Kontrak (PDF)' : 'Upload Kontrak (PDF)' }}
+                                    </button>
+
+                                    <div v-if="report.contract_file" class="mt-2 text-center">
+                                        <a 
+                                            :href="report.contract_file" 
+                                            target="_blank" 
+                                            class="text-xs text-[#4B741F] font-bold hover:underline inline-flex items-center gap-1"
+                                        >
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            Lihat File Kontrak
+                                        </a>
+                                    </div>
+                                </div>
                                 <a 
                                     :href="`/chat/${report.user_id}`"
                                     target="_blank" 

@@ -8,7 +8,49 @@ const props = defineProps({
     auth: Object
 });
 
-// 1. LOGIKA BADGE STATUS (Ditambah 'payment_verification')
+const contractInput = ref(null);
+
+const triggerContractUpload = () => {
+    contractInput.value.click();
+};
+
+const handleContractUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        alert('Mohon upload file dalam format PDF.');
+        return;
+    }
+
+    if (confirm(`Apakah Anda yakin ingin mengunggah "${file.name}" sebagai kontrak yang telah ditandatangani?`)) {
+        // Kita gunakan router manual agar lebih fleksibel
+        router.post(route('reports.uploadContract', props.report.id), {
+            _method: 'post',
+            contract_file: file
+        }, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => alert('Kontrak berhasil diunggah!'),
+            onError: (err) => alert('Gagal upload: ' + JSON.stringify(err))
+        });
+    }
+};
+
+const evidenceFiles = computed(() => {
+    if (!props.report.evidence_files) return [];
+    if (Array.isArray(props.report.evidence_files)) return props.report.evidence_files;
+    try {
+        return JSON.parse(props.report.evidence_files);
+    } catch (e) {
+        return [];
+    }
+});
+
+const isImage = (file) => {
+    return file.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
+};
+
 const getStatusBadge = (status) => {
     const map = {
         verification: { label: "Menunggu Verifikasi Admin", class: "bg-gray-500" },
@@ -23,6 +65,15 @@ const getStatusBadge = (status) => {
     };
     return map[status] || map["verification"];
 };
+
+const categoryBadgeClass = computed(() => {
+    switch (props.report.category) {
+        case 'Ringan': return 'bg-green-100 text-green-700 border-green-200';
+        case 'Sedang': return 'bg-orange-100 text-orange-700 border-orange-200';
+        case 'Berat': return 'bg-red-100 text-red-700 border-red-200';
+        default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+});
 
 const statusInfo = computed(() => getStatusBadge(props.report?.status));
 
@@ -135,6 +186,11 @@ const submitReview = () => {
                     </span>
                 </div>
                 <h2 class="text-xl md:text-2xl font-light text-white/90 max-w-3xl leading-relaxed">{{ props.report.title }}</h2>
+                <div v-if="props.report.category" class="mt-4">
+                    <span :class="`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase border ${categoryBadgeClass}`">
+                        Kerusakan {{ props.report.category }}
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -143,34 +199,84 @@ const submitReview = () => {
                 
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-[#F54900]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Timeline Pekerjaan
-                        </h3>
-                        <div class="relative pl-4">
-                            <div class="absolute top-2 left-[27px] h-full w-[2px] bg-gray-200"></div>
-                            <div v-for="(step, index) in timelineSteps" :key="index" class="relative pl-12 pb-10 last:pb-0">
-                                <div class="absolute top-0 left-0 w-14 h-14 flex items-center justify-center bg-white">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center z-10 border-2" :class="step.status === 'completed' ? 'bg-[#00C853] border-[#00C853]' : step.status === 'current' ? 'bg-white border-[#F54900] animate-pulse' : 'bg-gray-100 border-gray-300'">
-                                        <svg v-if="step.status === 'completed'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                        <div v-else class="w-2.5 h-2.5 rounded-full" :class="step.status === 'current' ? 'bg-[#F54900]' : 'bg-gray-300'"></div>
-                                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-[#F54900]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Timeline Pekerjaan
+                    </h3>
+                    <div class="relative pl-4">
+                        <div class="absolute top-2 left-[27px] h-full w-[2px] bg-gray-200"></div>
+                        
+                        <div v-for="(step, index) in timelineSteps" :key="index" class="relative pl-12 pb-10 last:pb-0">
+                            
+                            <div class="absolute top-0 left-0 w-14 h-14 flex items-center justify-center bg-white">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center z-10 border-2" :class="step.status === 'completed' ? 'bg-[#00C853] border-[#00C853]' : step.status === 'current' ? 'bg-white border-[#F54900] animate-pulse' : 'bg-gray-100 border-gray-300'">
+                                    <svg v-if="step.status === 'completed'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    <div v-else class="w-2.5 h-2.5 rounded-full" :class="step.status === 'current' ? 'bg-[#F54900]' : 'bg-gray-300'"></div>
                                 </div>
-                                <div :class="step.status === 'completed' ? 'bg-[#F8FDF9] border-green-50' : 'bg-white border-transparent'" class="rounded-lg p-3 border">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h4 class="font-bold text-gray-800">{{ step.title }}</h4>
-                                            <p class="text-sm text-gray-600 mt-1">{{ step.desc }}</p>
+                            </div>
+
+                            <div :class="step.status === 'completed' ? 'bg-[#F8FDF9] border-green-50' : 'bg-white border-transparent'" class="rounded-lg p-3 border">
+                                <div class="flex justify-between items-start">
+                                    <div class="w-full">
+                                        <h4 class="font-bold text-gray-800">{{ step.title }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">{{ step.desc }}</p>
+
+                                        <div v-if="step.title === 'Pengajuan & Verifikasi' && evidenceFiles.length > 0" class="mt-3 bg-white p-3 rounded-lg border border-gray-100">
+                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Bukti Kerusakan</p>
+                                            <div class="grid grid-cols-3 gap-2">
+                                                <a v-for="(file, i) in evidenceFiles" :key="i" :href="`/storage/${file}`" target="_blank" class="block aspect-square rounded overflow-hidden border border-gray-200 relative group">
+                                                    <img v-if="isImage(file)" :src="`/storage/${file}`" class="w-full h-full object-cover group-hover:scale-110 transition" />
+                                                    <div v-else class="w-full h-full bg-black flex items-center justify-center text-white">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    </div>
+                                                </a>
+                                            </div>
                                         </div>
-                                        <div class="text-right shrink-0 ml-4 min-w-[90px]">
-                                            <p class="text-sm font-bold text-gray-700">{{ formatDate(step.raw_date) }}</p>
-                                            <p class="text-xs text-gray-500">{{ formatTime(step.raw_date) }}</p>
+
+                                        <div v-if="step.title === 'Pembayaran & Kontrak'" class="mt-3">
+    
+                                            <div v-if="props.report.contract_file" class="space-y-3">
+                                                
+                                                <div class="flex flex-wrap gap-2">
+                                                    <a :href="props.report.contract_file" target="_blank" 
+                                                    class="flex-1 min-w-[140px] inline-flex justify-center items-center gap-2 px-4 py-2 bg-[#4B741F] hover:bg-[#3A5A18] text-white text-xs font-bold rounded-lg transition shadow-sm">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                        Download PDF
+                                                    </a>
+
+                                                    <button @click="triggerContractUpload" 
+                                                            class="flex-1 min-w-[140px] inline-flex justify-center items-center gap-2 px-4 py-2 bg-[#BB4D00] hover:bg-[#973C00] text-white text-xs font-bold rounded-lg transition shadow-sm">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                                        Upload Kontrak Isi
+                                                    </button>
+                                                    
+                                                </div>
+
+                                                <div class="text-center">
+                                                    <a :href="props.report.contract_file" target="_blank" class="text-[10px] text-blue-600 font-bold hover:underline inline-flex items-center gap-1">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                        Cek File Terakhir
+                                                    </a>
+                                                </div>
+
+                                            </div>
+
+                                            <div v-else class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 text-gray-400 text-xs font-bold rounded-lg cursor-not-allowed w-full justify-center">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                Menunggu Mitra Upload Kontrak
+                                            </div>
+
                                         </div>
+                                    </div>
+                                    <div class="text-right shrink-0 ml-4 min-w-[90px]">
+                                        <p class="text-sm font-bold text-gray-700">{{ formatDate(step.raw_date) }}</p>
+                                        <p class="text-xs text-gray-500">{{ formatTime(step.raw_date) }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
                     <div v-if="props.report.status === 'process'" class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-6">
                         <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -281,12 +387,6 @@ const submitReview = () => {
                                     </div>
                                     
                                     <div class="grid grid-cols-2 gap-2">
-                                        <div v-if="props.report.contract_file">
-                                            <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Kontrak Kerja</p>
-                                            <a :href="props.report.contract_file" target="_blank" class="block w-full py-2 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition">
-                                                📂 Buka Link
-                                            </a>
-                                        </div>
                                         <div v-if="props.report.payment_proof">
                                             <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Bukti Bayar</p>
                                             <a :href="props.report.payment_proof" target="_blank" class="block w-full py-2 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition">
@@ -350,4 +450,11 @@ const submitReview = () => {
             </div>
         </div>
     </div>
+    <input 
+        type="file" 
+        ref="contractInput" 
+        class="hidden" 
+        accept="application/pdf" 
+        @change="handleContractUpload" 
+    />
 </template>

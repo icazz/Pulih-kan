@@ -30,11 +30,22 @@ class ReportController extends Controller
             'location' => 'required',
             'latitude' => 'required',
             'longitude' => 'required',
-            'drive_link' => 'nullable|url',
+            'evidence.*' => 'nullable|mimes:jpg,jpeg,png,mp4,mov|max:10240',
             'deskripsi' => 'required', 
             'house_size' => 'nullable',
             'damage_types' => 'nullable|array',
         ]);
+
+        $evidencePaths = [];
+
+        if ($request->hasFile('evidence')) {
+            foreach ($request->file('evidence') as $file) {
+                // Simpan file ke folder: storage/app/public/evidence
+                // $path akan berisi string seperti "evidence/namafileunik.jpg"
+                $path = $file->store('evidence', 'public');
+                $evidencePaths[] = $path;
+            }
+        }
 
         // 2. Simpan ke Database
         Report::create([
@@ -44,7 +55,7 @@ class ReportController extends Controller
             'latitude' => $data['latitude'],
             'longitude' => $data['longitude'],
             'status' => 'verification',
-            'drive_link' => $data['drive_link'] ?? null,
+            'evidence_files' => json_encode($evidencePaths),
             'description'  => $data['deskripsi'],  
             'house_size'   => $data['house_size'],    
             'damage_types' => $data['damage_types'],  
@@ -68,8 +79,7 @@ class ReportController extends Controller
                 'title' => $report->title,
                 'location' => $report->location,
                 'date' => $report->created_at->format('d M Y'),
-                // Pastikan menggunakan kolom drive_link (bukan image_before)
-                'drive_link' => $report->drive_link, 
+                'evidence_files' => $report->evidence_files,
                 'status' => $report->status,
                 'progress' => $report->progress ?? 0,
                 
@@ -232,26 +242,70 @@ class ReportController extends Controller
             abort(403, 'Aksi tidak diizinkan.');
         }
 
-        // Validasi String (Link)
+        // 1. Validasi File
         $request->validate([
             'payment_type' => 'required',
-            'contract'     => 'required|string',
-            'proof'        => 'required|string',
+            'proof'        => 'required|mimes:jpg,jpeg,png,pdf|max:5120', 
         ]);
 
         try {
-            // HANYA UPDATE DATA PEMBAYARAN, JANGAN UBAH STATUS
+            // 2. Upload File Bukti
+            $path = null;
+            if ($request->hasFile('proof')) {
+                $path = $request->file('proof')->store('payment_proofs', 'public');
+            }
+
+            // 3. Update Database
             $report->update([
                 'payment_method' => $request->payment_type,
-                'contract_file'  => $request->contract,
-                'payment_proof'  => $request->proof,
+                'payment_proof'  => $path ? url('storage/' . $path) : null,
+                
+                // --- PERBAIKAN DI SINI ---
+                // Jangan ubah jadi 'payment_verification' karena database menolak.
+                // Tetap 'pending' saja sesuai alur Anda.
+                // Nanti Admin yang cek: Jika 'payment_proof' terisi, berarti butuh verifikasi.
+                'status' => 'pending', 
             ]);
 
-            return redirect()->route('reports.show', $id)->with('message', 'Bukti pembayaran berhasil dikirim! Mohon tunggu admin.');
+            return redirect()->route('reports.show', $id)
+                ->with('message', 'Bukti pembayaran berhasil dikirim! Mohon tunggu konfirmasi admin.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal menyimpan: ' . $e->getMessage()]);
         }
+    }
+
+    public function uploadContract(Request $request, $id)
+    {
+        $request->validate([
+            'contract_file' => 'required|mimes:pdf|max:5120', 
+        ]);
+
+        $report = Report::findOrFail($id);
+        
+        // Pastikan hanya pemilik laporan yang bisa upload
+        if ($report->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        if ($request->hasFile('contract_file')) {
+            // Hapus file lama jika ada
+            if ($report->contract_file) {
+                $oldPath = str_replace(url('storage/'), '', $report->contract_file);
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            // Simpan file baru (overwrite/ganti)
+            $path = $request->file('contract_file')->store('contracts', 'public');
+            
+            $report->update([
+                'contract_file' => url('storage/' . $path) 
+            ]);
+        }
+
+        return back()->with('message', 'Kontrak berhasil diupload!');
     }
 
     public function complete($id)
@@ -265,7 +319,12 @@ class ReportController extends Controller
             'progress' => 100
         ]);
 
-        return back()->with('message', 'Terima kasih! Pesanan telah ditandai selesai.');
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Tambahkan ->setStatusCode(303)
+        // Ini memaksa browser menggunakan 'GET' saat redirect ke halaman show
+        return to_route('reports.show', $id)
+            ->with('message', 'Terima kasih! Pesanan telah ditandai selesai.')
+            ->setStatusCode(303); 
     }
 
     public function storeReview(Request $request, $id)

@@ -18,6 +18,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const currentStep = ref(1);
+const previewUrls = ref([]);
 
 const form = useForm({
     title: '', 
@@ -29,7 +30,7 @@ const form = useForm({
     latitude: '', 
     longitude: '',
     damage_types: [], 
-    drive_link: '', 
+    evidence: [],
     deskripsi: ''
 });
 
@@ -41,6 +42,19 @@ const opsiKerusakan = [
 const toggleKerusakan = (item) => {
     if (form.damage_types.includes(item)) form.damage_types = form.damage_types.filter(i => i !== item);
     else form.damage_types.push(item);
+};
+
+const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    
+    // Masukkan file object ke dalam form inertia
+    form.evidence = files;
+
+    // Buat URL preview agar user bisa melihat gambar yang dipilih
+    previewUrls.value = files.map(file => {
+        // Jika file adalah video, kita tidak bisa preview gambar, jadi kosongkan atau beri placeholder
+        return file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+    });
 };
 
 const nextStep = () => {
@@ -62,17 +76,24 @@ const prevStep = () => {
 
 const submitForm = () => {
     // Validasi Step 2 sebelum submit
-    if (form.damage_types.length === 0 || !form.deskripsi || !form.drive_link) {
-        alert("Mohon lengkapi kerusakan, deskripsi, dan Link Google Drive."); return;
+    // Cek form.evidence.length > 0 (bukan drive_link lagi)
+    if (form.damage_types.length === 0 || !form.deskripsi || form.evidence.length === 0) {
+        alert("Mohon lengkapi kerusakan, deskripsi, dan upload bukti foto/video."); return;
     }
 
     form.location = `${form.alamat}, ${form.kota}, ${form.provinsi}`;
 
     form.post(route('reports.store'), {
+        forceFormData: true, // WAJIB ADA: Agar file bisa terkirim via Multipart form-data
         onSuccess: () => { },
         onError: (errors) => {
             console.error("Error submit:", errors);
-            alert("Gagal mengirim laporan. Cek kembali isian Anda.");
+            // Tampilkan pesan error spesifik jika ada (misal file terlalu besar)
+            if (errors['evidence.0']) {
+                alert("Salah satu file terlalu besar atau format tidak sesuai.");
+            } else {
+                alert("Gagal mengirim laporan. Cek kembali isian Anda.");
+            }
         }
     });
 };
@@ -202,17 +223,35 @@ const initMap = () => {
                     </div>
                 </div>
 
-                <div class="mb-8">
-                    <label class="block text-[#716363] text-lg mb-2 font-medium">
-                        Link Folder Google Drive (Foto/Video Bukti)
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2">Foto/Video Bukti Kerusakan</label>
+                    
+                    <input 
+                        type="file" 
+                        multiple 
+                        accept="image/*,video/*"
+                        @change="handleFileUpload"
+                        class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-[#F2A900] file:text-white
+                        hover:file:bg-orange-600 cursor-pointer"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">*Bisa pilih lebih dari satu foto/video.</p>
+
+                    <div v-if="previewUrls.length" class="flex gap-2 mt-4 flex-wrap">
+                        <div v-for="(url, index) in previewUrls" :key="index" class="relative w-24 h-24">
+                            <img v-if="url" :src="url" class="w-full h-full object-cover rounded-lg border border-gray-300">
+                            <div v-else class="w-full h-full bg-black text-white flex items-center justify-center rounded-lg text-xs text-center p-1">
+                                Video Selected
+                            </div>
                         </div>
-                        <input type="url" v-model="form.drive_link" class="w-full bg-white border border-[#973C00] rounded-xl pl-10 pr-4 py-3 text-[#4F3726] focus:ring-2 focus:ring-[#973C00] shadow-sm placeholder-gray-400" placeholder="https://drive.google.com/drive/folders/...">
                     </div>
-                    <p class="text-sm text-gray-500 mt-2">*Pastikan akses link sudah "Anyone with the link".</p>
+                    
+                    <div v-if="form.errors.evidence" class="text-red-500 text-sm mt-1">
+                        {{ form.errors.evidence }}
+                    </div>
                 </div>
 
                 <div class="mb-10">

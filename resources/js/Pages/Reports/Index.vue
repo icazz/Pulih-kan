@@ -23,6 +23,33 @@ const tabs = [
     'Dibatalkan' 
 ];
 
+const getCoverImage = (report) => {
+    // 1. Cek apakah ada data evidence
+    if (!report.evidence_files) return null;
+
+    let files = [];
+    try {
+        // 2. Parsing data. Jika database mengembalikan string JSON, kita parse.
+        // Jika sudah array, langsung pakai.
+        files = typeof report.evidence_files === 'string' 
+            ? JSON.parse(report.evidence_files) 
+            : report.evidence_files;
+    } catch (e) {
+        return null;
+    }
+
+    // 3. Ambil file pertama
+    if (Array.isArray(files) && files.length > 0) {
+        const firstFile = files[0];
+        // Cek ekstensi file (pastikan gambar)
+        if (firstFile.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+             // Return path lengkap ke storage
+             return '/storage/' + firstFile;
+        }
+    }
+    return null; // Jika tidak ada gambar atau error
+};
+
 // --- LOGIC STATUS BADGE (Diupdate dengan status baru) ---
 const getStatusBadge = (status) => {
     const map = {
@@ -161,14 +188,25 @@ const filteredReports = computed(() => {
                 </div>
 
                 <div class="p-6 flex flex-col md:flex-row gap-6">
-                    <div class="w-full md:w-56 h-48 rounded-2xl overflow-hidden flex-shrink-0 relative shadow-sm border border-gray-100 bg-gray-50 flex flex-col items-center justify-center group">
-                        <svg class="w-16 h-16 text-gray-400 mb-2 group-hover:scale-110 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                        
-                        <span class="text-xs text-gray-500 font-medium">Bukti di Google Drive</span>
-                        
-                        <a :href="report.drive_link" target="_blank" class="mt-3 px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-700 transition shadow-sm flex items-center gap-1">
-                            Buka <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        </a>
+                    <div class="w-full md:w-56 h-48 rounded-2xl overflow-hidden flex-shrink-0 relative shadow-sm border border-gray-100 bg-gray-50 group">
+    
+                        <img 
+                            v-if="getCoverImage(report)" 
+                            :src="getCoverImage(report)" 
+                            class="w-full h-full object-cover transition duration-700 group-hover:scale-110"
+                            alt="Bukti Kerusakan"
+                        />
+
+                        <div v-else class="w-full h-full flex flex-col items-center justify-center bg-gray-200 text-gray-400">
+                            <svg class="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs font-medium">No Image</span>
+                        </div>
+
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <Link :href="route('reports.show', report.id)" class="text-white text-xs font-bold border border-white px-4 py-2 rounded-full hover:bg-white hover:text-black transition">
+                                Lihat Detail
+                            </Link>
+                        </div>
                     </div>
 
                     <div class="flex-grow flex flex-col justify-between py-1">

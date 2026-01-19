@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\Report;
 
@@ -250,5 +251,45 @@ class VendorController extends Controller
             'auth' => ['user' => Auth::user()]
         ]);
     }
+
+    public function uploadContract(Request $request, $id)
+{
+    // 1. Cek apakah request membawa file?
+    if (!$request->hasFile('contract_file')) {
+        dd("File tidak terdeteksi oleh Server. Cek 'post_max_size' di php.ini atau payload Frontend.");
+    }
+
+    // 2. Cek apakah file valid?
+    if (!$request->file('contract_file')->isValid()) {
+        dd("File terdeteksi tapi corrupt atau error saat upload.");
+    }
+
+    $request->validate([
+        'contract_file' => 'required|mimes:pdf|max:5120', 
+    ]);
+
+    $report = Report::findOrFail($id);
+    
+    // Hapus file lama logic...
+    if ($report->contract_file) {
+        $oldPath = str_replace(url('storage/'), '', $report->contract_file);
+        if (Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+    }
+
+    // Simpan
+    $path = $request->file('contract_file')->store('contracts', 'public');
+    
+    // DEBUG: Cek path yang dihasilkan
+    // dd($path); <--- Uncomment ini jika ingin melihat path file
+
+    // Update
+    $report->update([
+        'contract_file' => url('storage/' . $path) 
+    ]);
+
+    return back()->with('message', 'Kontrak berhasil diupload!');
+}
 
 }
