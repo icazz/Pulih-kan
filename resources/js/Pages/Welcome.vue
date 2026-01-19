@@ -104,7 +104,7 @@ const user = computed(() => page.props.auth.user);
                             class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
                         >
                             <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                            <span>{{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Daftar Sebagai Mitra' }}</span>
+                            <span>{{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Dashboard Mitra' }}</span>
                         </Link>
 
                     </div>
@@ -537,7 +537,7 @@ const user = computed(() => page.props.auth.user);
                     :href="user ? route('vendor.register') : route('login')"
                     class="px-8 py-4 rounded-lg bg-[#FFFFFF] text-[#7B3306] font-bold text-base shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 w-full sm:w-auto text-center"
                 >
-                    Daftar Sebagai Mitra
+                    Dashboard Mitra
                 </Link>
 
                 <Link
