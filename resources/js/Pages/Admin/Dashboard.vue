@@ -5,12 +5,97 @@ import { ref, computed } from 'vue';
 const props = defineProps({
     reports: Array,
     vendors: Array,
+    volunteers: Array,
+    donations: Array,
     auth: Object
 });
 
 const searchQuery = ref('');
 const activeTab = ref('Laporan User'); 
-const tabs = ['Laporan User', 'Verifikasi Vendor'];
+const tabs = ['Laporan User', 'Verifikasi Vendor', 'Relawan', 'Donasi'];
+
+// Logic Modal Gambar Bukti
+const showProofModal = ref(false);
+const selectedProofUrl = ref('');
+const openProof = (url) => {
+    selectedProofUrl.value = url;
+    showProofModal.value = true;
+};
+
+// Logic Update Donasi
+const updateDonationStatus = (id, status) => {
+    if(confirm(`Ubah status menjadi ${status}?`)) {
+        // Menggunakan URL manual untuk menghindari error Ziggy
+        router.patch(`/admin/donations/${id}`, { status }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                alert('Status donasi berhasil diperbarui!');
+            },
+            onError: (err) => {
+                console.error("Gagal update donasi:", err);
+            }
+        });
+    }
+};
+
+// Helper Format Rupiah
+const formatRupiah = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val);
+
+const volunteerTabs = ['Menunggu', 'Terverifikasi', 'Ditolak'];
+const activeVolunteerTab = ref('Menunggu');
+
+const getVolunteerBadge = (status) => {
+    if (status === 'verified') return { label: 'Terverifikasi', class: 'bg-green-100 text-green-700' };
+    if (status === 'rejected') return { label: 'Ditolak', class: 'bg-red-100 text-red-700' };
+    return { label: 'Menunggu', class: 'bg-yellow-100 text-yellow-700' };
+};
+
+const goToVolunteerDetail = (id) => {
+    router.visit(route('admin.volunteers.show', id));
+};
+
+const filteredVolunteers = computed(() => {
+    let data = props.volunteers || [];
+    
+    // Filter Tab Status
+    if (activeVolunteerTab.value === 'Menunggu') {
+        data = data.filter(v => v.status === 'pending');
+    } else if (activeVolunteerTab.value === 'Terverifikasi') {
+        data = data.filter(v => v.status === 'verified');
+    } else if (activeVolunteerTab.value === 'Ditolak') {
+        data = data.filter(v => v.status === 'rejected');
+    }
+
+    // Filter Search
+    if (searchQuery.value) {
+        const q = searchQuery.value.toLowerCase();
+        data = data.filter(v => v.name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q) || v.role.toLowerCase().includes(q));
+    }
+    return data;
+});
+
+// 4. LOGIC MODAL DETAIL RELAWAN (Paste di bagian bawah script)
+const showVolunteerModal = ref(false);
+const selectedVolunteer = ref(null);
+
+const openVolunteerModal = (volunteer) => {
+    selectedVolunteer.value = volunteer;
+    showVolunteerModal.value = true;
+};
+
+const closeVolunteerModal = () => {
+    showVolunteerModal.value = false;
+    selectedVolunteer.value = null;
+};
+
+const updateVolunteerStatus = (status) => {
+    if (!selectedVolunteer.value) return;
+    if (confirm(`Ubah status relawan menjadi ${status}?`)) {
+        router.patch(route('admin.volunteers.update', selectedVolunteer.value.id), { status }, {
+            onSuccess: () => closeVolunteerModal()
+        });
+    }
+};
 
 // Report Tabs
 const reportTabs = ['Semua', 'Menunggu Verifikasi', 'Menunggu Pembayaran', 'Dalam Pengerjaan', 'Selesai', 'Dibatalkan'];
@@ -183,6 +268,124 @@ const goToVendorDetail = (vendorId) => {
                     </div>
                 </div>
             </div>
+        </div>
+        <div v-if="activeTab === 'Relawan'" class="max-w-7xl mx-auto px-6 py-8">
+
+            <div v-if="filteredVolunteers.length === 0" class="text-center py-20 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
+                Tidak ada data relawan {{ activeVolunteerTab.toLowerCase() }}.
+            </div>
+
+            <div v-else class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
+                                <th class="p-4 min-w-[250px]">Profil Relawan</th>
+                                <th class="p-4 min-w-[200px]">Kontak</th>
+                                <th class="p-4 min-w-[200px]">Peran & Keahlian</th>
+                                <th class="p-4 min-w-[250px]">Alamat Domisili</th>
+                                <th class="p-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            <tr v-for="vol in filteredVolunteers" :key="vol.id" class="hover:bg-orange-50/30 transition">
+                                
+                                <td class="p-4 align-top">
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#BB4D00] font-bold shrink-0">
+                                            {{ vol.name.charAt(0) }}
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 text-base">{{ vol.name }}</p>
+                                            <p class="text-gray-500">{{ vol.email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 align-top">
+                                    <div class="space-y-2">
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 uppercase font-bold">Pribadi</p>
+                                            <p class="font-medium text-gray-700">{{ vol.phone }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 uppercase font-bold">Darurat</p>
+                                            <p class="font-medium text-red-600">{{ vol.emergency_contact }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 align-top">
+                                    <div class="mb-2">
+                                        <span class="inline-block px-2 py-1 bg-orange-50 text-[#BB4D00] rounded text-xs font-bold border border-orange-100">
+                                            {{ vol.role }}
+                                        </span>
+                                    </div>
+                                    <p class="text-gray-600 text-xs leading-relaxed max-w-[250px]">
+                                        {{ vol.experience }}
+                                    </p>
+                                </td>
+
+                                <td class="p-4 align-top">
+                                    <p class="text-gray-800 font-medium mb-1">{{ vol.address }}</p>
+                                    <p class="text-gray-500 text-xs">
+                                        {{ vol.city }}, {{ vol.province }}
+                                    </p>
+                                </td>
+
+                                <td class="p-4 align-top text-center">
+                                    <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getVolunteerBadge(vol.status).class}`">
+                                        {{ getVolunteerBadge(vol.status).label }}
+                                    </span>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="activeTab === 'Donasi'" class="max-w-6xl mx-auto px-6 py-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-bold border-b">
+                        <tr>
+                            <th class="p-4">Nama Donatur</th>
+                            <th class="p-4">Jumlah</th>
+                            <th class="p-4 text-center">Bukti</th>
+                            <th class="p-4 text-center">Status</th>
+                            <th class="p-4 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y text-sm">
+                        <tr v-for="item in donations" :key="item.id" class="hover:bg-gray-50">
+                            <td class="p-4 font-bold">{{ item.name }}<br><span class="text-xs text-gray-400 font-normal">{{ new Date(item.created_at).toLocaleDateString() }}</span></td>
+                            <td class="p-4 font-bold text-[#BB4D00]">{{ formatRupiah(item.amount) }}</td>
+                            <td class="p-4 text-center">
+                                <button @click="openProof('/storage/' + item.proof_file)" class="text-blue-600 underline text-xs">Lihat Bukti</button>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span :class="`px-2 py-1 rounded text-xs font-bold ${item.status === 'verified' ? 'bg-green-100 text-green-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`">
+                                    {{ item.status === 'verified' ? 'Diterima' : item.status === 'rejected' ? 'Ditolak' : 'Menunggu' }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right flex justify-end gap-2">
+                                <button v-if="item.status === 'pending'" @click="updateDonationStatus(item.id, 'verified')" class="bg-green-500 text-white p-2 rounded hover:bg-green-600" title="Terima">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </button>
+                                <button v-if="item.status === 'pending'" @click="updateDonationStatus(item.id, 'rejected')" class="bg-red-500 text-white p-2 rounded hover:bg-red-600" title="Tolak">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div v-if="showProofModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" @click="showProofModal = false">
+            <img :src="selectedProofUrl" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl" />
         </div>
     </div>
 </template>

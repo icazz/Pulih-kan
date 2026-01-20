@@ -3,7 +3,7 @@ import { Link, usePage, router } from "@inertiajs/vue3";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 
 const page = usePage();
-const user = computed(() => page.props.auth.user);
+const user = computed(() => page.props.auth?.user);
 
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);

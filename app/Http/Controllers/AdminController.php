@@ -4,15 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use App\Models\Vendor;
+use App\Models\Volunteer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Models\Donation;
 
 class AdminController extends Controller
 {
     public function index()
     {
         $reports = Report::with('user')->latest()->get();
+        $volunteers = Volunteer::latest()->get();
+        $donations = Donation::latest()->get();
 
         $reports->transform(function ($report) {
             return [
@@ -34,6 +38,8 @@ class AdminController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'reports' => $reports, // Gunakan variabel yang sudah di-transform di atas
             'vendors' => Vendor::latest()->get(),
+            'volunteers' => $volunteers,
+            'donations' => $donations
         ]);
     }
 
@@ -110,5 +116,45 @@ class AdminController extends Controller
         }
 
         return back()->with('message', 'Status laporan berhasil diperbarui!');
+    }
+
+    public function volunteers()
+    {
+        // Mengambil data relawan terbaru
+        $volunteers = Volunteer::latest()->get();
+
+        // Mengirim data ke tampilan Vue
+        // Pastikan Anda nanti membuat file Vue di folder: resources/js/Pages/Admin/Volunteers/Index.vue
+        return Inertia::render('Admin/Volunteers/Index', [
+            'volunteers' => $volunteers
+        ]);
+    }
+
+    // 2. Mengupdate Status Relawan (Verifikasi/Tolak)
+    public function updateVolunteer(Request $request, Volunteer $volunteer)
+    {
+        $request->validate([
+            'status' => 'required|in:verified,rejected,pending'
+        ]);
+
+        $volunteer->update([
+            'status' => $request->status
+        ]);
+
+        return back()->with('message', 'Status relawan berhasil diperbarui.');
+    }
+
+    public function showVolunteer(Volunteer $volunteer)
+    {
+        return Inertia::render('Admin/RelawanDetail', [
+            'volunteer' => $volunteer
+        ]);
+    }
+
+    public function updateDonation(Request $request, Donation $donation)
+    {
+        $request->validate(['status' => 'required|in:verified,rejected']);
+        $donation->update(['status' => $request->status]);
+        return back()->with('message', 'Status donasi diperbarui.');
     }
 }

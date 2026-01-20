@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DonationController;
 
 Route::get('/', function () {
     if (Auth::check() && Auth::user()->is_admin) {
@@ -26,16 +27,10 @@ Route::get('/', function () {
 Route::get('/mitra-vendor', [VendorController::class, 'list'])->name('vendor.list');
 // Halaman Detail Vendor
 Route::get('/mitra-vendor/{id}', [VendorController::class, 'show'])->name('vendor.show');
-Route::get('/donasi', function () {
-    return Inertia::render('Donasi', [
-        'auth' => ['user' => Illuminate\Support\Facades\Auth::user()] // Kirim data auth jaga-jaga user sudah login
-    ]);
-})->name('donasi');
-Route::get('/relawan', function () {
-    return Inertia::render('Relawan', [
-        'auth' => ['user' => Illuminate\Support\Facades\Auth::user()] // Kirim data auth jaga-jaga user sudah login
-    ]);
-})->name('relawan');
+Route::get('/donasi', [DonationController::class, 'index'])->name('donasi'); // Halaman Donasi
+Route::post('/donasi', [DonationController::class, 'store'])->name('donasi.store'); // Aksi Kirim Bukti
+Route::get('/relawan', [App\Http\Controllers\VolunteerController::class, 'create'])->name('relawan.create');
+Route::post('/relawan', [App\Http\Controllers\VolunteerController::class, 'store'])->name('relawan.store');
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -100,6 +95,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::patch('/reports/{id}/status', [AdminController::class, 'update'])->name('admin.updateStatus');
     Route::patch('/vendors/{id}/verify', [AdminController::class, 'verifyVendor'])->name('admin.verifyVendor');
     Route::get('/vendors/{id}', [AdminController::class, 'showVendor'])->name('admin.vendors.show');
+    Route::get('/volunteers', [AdminController::class, 'volunteers'])->name('volunteers.index');
+    Route::patch('/volunteers/{volunteer}', [AdminController::class, 'updateVolunteer'])->name('volunteers.update');
+    Route::get('/volunteers/{volunteer}', [AdminController::class, 'showVolunteer'])->name('volunteers.show');
+    Route::patch('/donations/{donation}', [AdminController::class, 'updateDonation'])->name('donations.update');
 });
 
 require __DIR__.'/auth.php';
