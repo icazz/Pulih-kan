@@ -90,20 +90,20 @@ const getCategoryIcons = (services) => {
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center gap-4 mb-6">
                 <div class="flex items-center gap-2 text-gray-700 font-bold text-sm min-w-fit">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                    Kategori Vendor
+                    Kategori Mitra
                 </div>
                 
                 <div class="flex gap-2 overflow-x-auto no-scrollbar w-full">
                     <button v-for="cat in categories" :key="cat" @click="selectedCategory = cat"
                         class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition"
                         :class="selectedCategory === cat ? 'bg-[#84CC16] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
-                        {{ cat === 'Semua' ? 'Semua Vendor (' + vendors.length + ')' : cat }}
+                        {{ cat === 'Semua' ? 'Semua Mitra (' + vendors.length + ')' : cat }}
                     </button>
                 </div>
             </div>
 
             <div class="mb-6 text-gray-500 text-sm">
-                Menampilkan <span class="font-bold text-gray-800">{{ filteredVendors.length }}</span> vendor
+                Menampilkan <span class="font-bold text-gray-800">{{ filteredVendors.length }}</span> mitra
             </div>
 
             <div v-if="filteredVendors.length === 0" class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">

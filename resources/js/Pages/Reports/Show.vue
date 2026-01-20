@@ -111,14 +111,14 @@ const timelineSteps = computed(() => [
     {
         title: "Pengajuan & Verifikasi",
         raw_date: props.report.created_at, 
-        desc: "Laporan diperiksa admin.",
+        desc: "Laporan telah diperiksa dan diverifikasi oleh admin, silakan mencari mitra terdekat anda dengan melihat penawaran.",
         // Selalu completed jika sudah masuk tahap pembayaran
         status: "completed", 
     },
     {
         title: "Pembayaran & Kontrak",
         raw_date: props.report.payment_method ? props.report.updated_at : '-',
-        desc: "Upload bukti & kontrak.",
+        desc: "Hubungi mitra lewat fitur chat untuk diskusi biaya final dan minta kontrak kerja untuk di upload dibawah ini dengan format PDF. Jangan lupa melakukan pembayaran sesuai kesepakatan, lalu tunggu verifikasi pembayaran.",
         // Jika status 'payment_verification' atau lebih lanjut, berarti step ini selesai
         status: (props.report.status === 'payment_verification' || props.report.status === 'process' || props.report.status === 'completed') 
                 ? "completed" 
@@ -127,7 +127,7 @@ const timelineSteps = computed(() => [
     {
         title: "Pengerjaan & Survei",
         raw_date: "-", 
-        desc: "Menunggu konfirmasi admin untuk mulai.",
+        desc: "Pengerjaan dimulai dan survei dilakukan. Jangan lupa untuk selalu berkomunikasi dengan mitra anda.",
         // Jika payment_verification, statusnya 'current' (sedang diproses admin)
         status: (props.report.status === 'payment_verification') 
                 ? "current" 
@@ -136,7 +136,7 @@ const timelineSteps = computed(() => [
     {
         title: "Pekerjaan Selesai",
         raw_date: props.report.status === "completed" ? props.report.updated_at : "-",
-        desc: "Pekerjaan diselesaikan.",
+        desc: "Selesaikan pekerjaan jika sudah selesai dan beri ulasan untuk mendukung mitra kami.",
         status: props.report.status === "completed" ? "completed" : "upcoming",
     },
 ]);
@@ -241,13 +241,13 @@ const submitReview = () => {
                                                     <a :href="props.report.contract_file" target="_blank" 
                                                     class="flex-1 min-w-[140px] inline-flex justify-center items-center gap-2 px-4 py-2 bg-[#4B741F] hover:bg-[#3A5A18] text-white text-xs font-bold rounded-lg transition shadow-sm">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                                        Download PDF
+                                                        Download Kontrak (PDF)
                                                     </a>
 
                                                     <button @click="triggerContractUpload" 
                                                             class="flex-1 min-w-[140px] inline-flex justify-center items-center gap-2 px-4 py-2 bg-[#BB4D00] hover:bg-[#973C00] text-white text-xs font-bold rounded-lg transition shadow-sm">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                                        Upload Kontrak Isi
+                                                        Upload Kontrak (PDF)
                                                     </button>
                                                     
                                                 </div>

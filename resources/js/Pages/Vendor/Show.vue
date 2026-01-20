@@ -42,7 +42,7 @@ const getPercentage = (count) => {
                     <div class="text-center md:text-left space-y-3 flex-1">
                         <div>
                             <h1 class="text-3xl md:text-4xl font-bold tracking-tight">{{ vendor.nama_mitra }}</h1>
-                            <p class="text-white/80 text-sm mt-1">Vendor Pemulihan & Konstruksi Terpercaya</p>
+                            <p class="text-white/80 text-sm mt-1">Mitra Pemulihan & Konstruksi Terpercaya</p>
                         </div>
                         
                         <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium text-white/90">
@@ -76,7 +76,7 @@ const getPercentage = (count) => {
         <div class="max-w-6xl mx-auto px-6 mt-8 space-y-8">
             
             <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h3 class="font-bold text-gray-800 mb-6 text-lg border-b border-gray-100 pb-4">Tentang Vendor</h3>
+                <h3 class="font-bold text-gray-800 mb-6 text-lg border-b border-gray-100 pb-4">Tentang Mitra</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-[#F3F8F2] p-8 rounded-xl text-center border border-[#E0EBDD] hover:shadow-md transition">
                         <div class="text-[#5E7E55] mb-3 flex justify-center">
