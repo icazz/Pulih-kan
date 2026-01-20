@@ -95,7 +95,7 @@ const user = computed(() => page.props.auth.user);
                             class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
                         >
                             <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                            <span>Dashboard Mitra</span>
+                            <span>Daftar Mitra</span>
                         </Link>
 
                         <Link
@@ -104,7 +104,7 @@ const user = computed(() => page.props.auth.user);
                             class="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[#44403B] to-[#292524] text-white font-bold text-sm shadow-xl hover:scale-105 transition-transform duration-300 border border-white/10"
                         >
                             <img src="/images/icon-hand.png" alt="Hand" class="w-5 h-5 invert brightness-0 saturate-100" />
-                            <span>{{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Ulang Mitra' : 'Dashboard Mitra' }}</span>
+                            <span>{{ $page.props.auth.user.vendor?.status === 'rejected' ? 'Daftar Mitra' : 'Daftar Mitra' }}</span>
                         </Link>
 
                     </div>
@@ -537,7 +537,7 @@ const user = computed(() => page.props.auth.user);
                     :href="user ? route('vendor.register') : route('login')"
                     class="px-8 py-4 rounded-lg bg-[#FFFFFF] text-[#7B3306] font-bold text-base shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 w-full sm:w-auto text-center"
                 >
-                    Dashboard Mitra
+                    Daftar Mitra
                 </Link>
 
                 <Link
@@ -686,7 +686,7 @@ const user = computed(() => page.props.auth.user);
                             </svg>
                             <div>
                                 <p class="text-white text-sm font-semibold">
-                                    (021) 123-4567
+                                    085190030606
                                 </p>
                                 <p class="text-[#A6A09B] text-xs">
                                     Senin - Jumat
@@ -749,6 +749,29 @@ const user = computed(() => page.props.auth.user);
                                 @pulih.kan
                             </a>
                         </li>
+                        <li class="flex items-center gap-3">
+                            <svg
+                                class="w-5 h-5 text-[#ff0050] flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"
+                                ></path>
+                            </svg>
+                            <a
+                                href="https://www.tiktok.com/@pulih.kan"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-[#A6A09B] text-sm hover:text-white transition-colors cursor-pointer"
+                            >
+                                @pulih.kan
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -776,10 +799,10 @@ const user = computed(() => page.props.auth.user);
                         </svg>
                         <div>
                             <p class="text-white text-sm font-semibold">
-                                Jl. Pemulihan No. 123
+                                Jl. Keputih Timur Jaya L2
                             </p>
                             <p class="text-[#A6A09B] text-xs">
-                                Jakarta Selatan 12345
+                                Surabaya 60111
                             </p>
                         </div>
                     </div>
