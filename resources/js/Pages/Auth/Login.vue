@@ -75,6 +75,16 @@ const submit = () => {
                     {{ status }}
                 </div>
 
+                <div v-if="Object.keys(form.errors).length > 0" class="mb-6 p-4 rounded-lg bg-red-100 border-l-4 border-red-600 animate-pulse">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-red-700 font-bold">Gagal Masuk:</span>
+                    </div>
+                    <ul class="mt-2 list-disc list-inside text-sm text-red-600">
+                        <li v-for="(error, key) in form.errors" :key="key">{{ error }}</li>
+                    </ul>
+                </div>
+
                 <form @submit.prevent="submit" class="space-y-7">
                     <div>
                         <input
