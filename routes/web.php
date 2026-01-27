@@ -31,6 +31,9 @@ Route::get('/donasi', [DonationController::class, 'index'])->name('donasi'); // 
 Route::post('/donasi', [DonationController::class, 'store'])->name('donasi.store'); // Aksi Kirim Bukti
 Route::get('/relawan', [App\Http\Controllers\VolunteerController::class, 'create'])->name('relawan.create');
 Route::post('/relawan', [App\Http\Controllers\VolunteerController::class, 'store'])->name('relawan.store');
+Route::get('/faq', function () {
+    return Inertia::render('Faq');
+})->name('about.us');
 // --- USER ROUTES ---
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -82,9 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/reports/{id}/payment', [ReportController::class, 'storePayment'])->name('reports.storePayment');
     Route::patch('/reports/{id}/complete', [ReportController::class, 'complete'])->name('reports.complete');
     Route::post('/reports/{id}/review', [ReportController::class, 'storeReview'])->name('reports.review');
-
-    // Dummy
-    Route::get('/tentang-kami', function () { return "Halaman Tentang Kami"; })->name('about.us');
+    
 });
 
 // --- ADMIN ROUTES ---
