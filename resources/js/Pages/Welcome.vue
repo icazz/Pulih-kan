@@ -541,7 +541,7 @@ const user = computed(() => page.props.auth.user);
                 </Link>
 
                 <Link
-                    :href="user ? route('about.us') : route('login')"
+                    :href="route('about.us')" 
                     class="px-8 py-4 rounded-lg border-2 border-[#A89078] text-white font-semibold text-base hover:bg-[#A89078]/20 transition-all duration-300 w-full sm:w-auto text-center"
                 >
                     Pelajari Lebih Lanjut
