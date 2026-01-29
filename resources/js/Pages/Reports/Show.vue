@@ -409,6 +409,13 @@ const submitReview = () => {
                                     Bayar Sekarang
                                 </Link>
                             </div>
+
+                            <div>
+                                <Link :href="route('reports.payment', props.report.id)" 
+                                    class="w-full py-3 bg-[#5D250C] hover:bg-[#973C00] text-white font-bold rounded-xl shadow-md transition block text-center">
+                                    Ajukan bantuan dana
+                                </Link>
+                            </div>
                         </div>
                     </div>
 

@@ -16,6 +16,7 @@ Thumbs.db
 .phpunit.result.cache
 /auth.json
 
+/public/build
 /public/hot
 /public/storage
 
