@@ -170,6 +170,13 @@ const layanan = computed(() => {
                 </p>
             </div>
 
+            <div class="bg-white border border-gray-300 rounded-2xl p-6 md:p-8 mb-6 shadow-sm">
+                <h2 class="text-xl font-bold text-[#1C1917] mb-3">Kesulitan Biaya Perbaikan?</h2>
+                <p class="text-gray-600 leading-relaxed">
+                    Jika Anda ingin memperbaiki rumah tetapi memiliki keterbatasan biaya, Anda dapat mengajukan bantuan dana. Setelah “Ajukan Kerjasama” dikirim, Anda akan mengisi formulir tambahan untuk verifikasi kondisi dan kebutuhan dana.
+                </p>
+            </div>
+
             <div class="flex justify-end mt-8 gap-4 pb-20">
                 <Link :href="route('reports.show', report.id)" class="px-6 py-3 rounded-full text-gray-600 font-bold hover:bg-gray-100 transition border border-gray-300">
                     Kembali
