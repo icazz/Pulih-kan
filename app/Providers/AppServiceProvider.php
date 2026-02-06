@@ -23,14 +23,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::useManifestFilename('manifest.json');
 
-        // 2. Fix Mixed Content (TAMBAHAN BARU)
-        // Jika aplikasi berjalan di Production (Railway), paksa gunakan HTTPS
-       
-        if (str_starts_with(config('app.url'), 'https://')) {
         URL::forceScheme('https');
-    }
-        // if($this->app->environment('production') || $this->app->environment('development')) {
-        // URL::forceScheme('https');
-        // }
     }
 }

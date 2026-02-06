@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const searchQuery = ref('');
-const activeTab = ref('Laporan User'); 
+const activeTab = ref('Laporan User');
 const tabs = ['Laporan User', 'Verifikasi Vendor', 'Relawan', 'Donasi'];
 
 // Logic Modal Gambar Bukti
@@ -56,7 +56,7 @@ const goToVolunteerDetail = (id) => {
 
 const filteredVolunteers = computed(() => {
     let data = props.volunteers || [];
-    
+
     // Filter Tab Status
     if (activeVolunteerTab.value === 'Menunggu') {
         data = data.filter(v => v.status === 'pending');
@@ -138,9 +138,9 @@ const filteredReports = computed(() => {
 
 const filteredVendors = computed(() => {
     let data = props.vendors || [];
-    
+
     if (activeVendorTab.value === 'Menunggu') {
-        data = data.filter(v => v.status === 'pending' || (!v.status && !v.is_verified)); 
+        data = data.filter(v => v.status === 'pending' || (!v.status && !v.is_verified));
     } else if (activeVendorTab.value === 'Terverifikasi') {
         data = data.filter(v => v.status === 'verified' || v.is_verified);
     } else if (activeVendorTab.value === 'Ditolak') {
@@ -194,7 +194,7 @@ const goToVendorDetail = (vendorId) => {
 
         <div v-if="activeTab === 'Laporan User'" class="max-w-6xl mx-auto px-6 py-8">
             <div class="flex gap-2 overflow-x-auto mb-6 pb-2">
-                <button v-for="tab in reportTabs" :key="tab" @click="activeReportTab = tab" 
+                <button v-for="tab in reportTabs" :key="tab" @click="activeReportTab = tab"
                     class="px-4 py-2 text-sm font-semibold rounded-full border transition-all whitespace-nowrap"
                     :class="activeReportTab === tab ? 'bg-[#BB4D00] text-white border-[#BB4D00]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#BB4D00]'">
                     {{ tab }}
@@ -202,12 +202,12 @@ const goToVendorDetail = (vendorId) => {
             </div>
 
             <div v-if="filteredReports.length === 0" class="text-center py-20 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">Tidak ada laporan ditemukan.</div>
-            
+
             <div class="grid gap-4">
-                <Link 
-                    v-for="report in filteredReports" 
-                    :key="report.id" 
-                    :href="route('admin.reports.show', report.id)" 
+                <Link
+                    v-for="report in filteredReports"
+                    :key="report.id"
+                    :href="route('admin.reports.show', report.id)"
                     class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between hover:shadow-md hover:border-orange-300 transition cursor-pointer group"
                 >
                     <div class="flex items-center gap-4">
@@ -231,7 +231,7 @@ const goToVendorDetail = (vendorId) => {
 
         <div v-if="activeTab === 'Verifikasi Vendor'" class="max-w-6xl mx-auto px-6 py-8">
             <div class="flex gap-2 overflow-x-auto mb-6 pb-2">
-                <button v-for="tab in vendorTabs" :key="tab" @click="activeVendorTab = tab" 
+                <button v-for="tab in vendorTabs" :key="tab" @click="activeVendorTab = tab"
                     class="px-4 py-2 text-sm font-semibold rounded-full border transition-all whitespace-nowrap"
                     :class="activeVendorTab === tab ? 'bg-[#BB4D00] text-white border-[#BB4D00]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#BB4D00]'">
                     {{ tab }}
@@ -289,7 +289,7 @@ const goToVendorDetail = (vendorId) => {
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-sm">
                             <tr v-for="vol in filteredVolunteers" :key="vol.id" class="hover:bg-orange-50/30 transition">
-                                
+
                                 <td class="p-4 align-top">
                                     <div class="flex gap-3">
                                         <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-[#BB4D00] font-bold shrink-0">
